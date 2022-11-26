@@ -1,0 +1,33 @@
+{
+  "name": "react-data-types",
+  "version": "0.0.1",
+  "description": "Automate table and filter creation and other things and have your data models in the client",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx run jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quirinpa/data-types.git"
+  },
+  "keywords": [
+    "react",
+    "prop-types",
+    "material-table",
+    "material-ui",
+    "automation"
+  ],
+  "author": "quirinpa",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/quirinpa/data-types/issues"
+  },
+  "homepage": "https://github.com/quirinpa/data-types#readme",
+  "dependencies": {
+    "@material-ui/core": "^4.12.4",
+    "material-table": "^1.63.0",
+    "prop-types": "^15.7.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}
