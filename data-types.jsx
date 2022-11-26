@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import MyPropTypes from "./prop-types";
+import { _get } from "./utils";
 
 function TextCenter(props) {
   const { children } = props;
@@ -12,7 +13,7 @@ TextCenter.propTypes = {
   children: PropTypes.node,
 };
 
-export function FHCenter(props) {
+function FHCenter(props) {
   const { children } = props;
 
   return (<div style={{
@@ -28,56 +29,123 @@ FHCenter.propTypes = {
   children: PropTypes.node,
 };
 
-function stringDataType(field, title) {
-  return {
-    field,
-    title,
-    propType: PropTypes.string,
-    rederColumn: rowData => <TextCenter>{rowData[field]}</TextCenter>,
-  };
+export class IntegerType {
+  constructor(title) {
+    this.title = title;
+    this.propType = MyPropTypes.integer;
+  }
+
+  renderColumn(value) {
+    return <TextCenter>{value}</TextCenter>;
+  }
+
+  renderDetails(value) {
+    return value;
+  }
+
+  format(value) {
+    return value;
+  }
+
+  invalid(value) {
+    return value;
+  }
 }
 
-function levelDataType(field, title, Percent) {
-  return {
-    field,
-    title,
-    renderColumn: rowData => <FHCenter><Percent level={rowData[field].level} /></FHCenter>,
-    propType: PropTypes.shape({
-      issues: PropTypes.string,
-      level: MyPropTypes.percent,
-    }),
-  };
+export class StringType extends IntegerType {
+  constructor(title) {
+    super(title);
+    this.propType = PropTypes.string;
+  }
+
+  invalid(value) {
+    return !value;
+  }
 }
 
-function enumDataType(field, title, Enum, propType, accessor = "") {
-  return {
-    field,
-    title,
-    renderColumn: rowData => {
-      const value = _get(rowData[field], accessor);
-      return <FHCenter><Enum value={value} /></FHCenter>;
-    },
-    propType,
-  };
+export class ComponentType extends StringType {
+  constructor(title, Component, propType, accessor, defaultProp) {
+    super(title);
+    this.propType = propType;
+    this.accessor = accessor || "";
+    this.defaultProp = defaultProp || "";
+    this.Component = Component;
+  }
+
+  read(value) {
+    return _get(value, this.accessor);
+    // if (typeof value === "object") 
+    // else
+    //   return value;
+  }
+
+  renderColumn(value) {
+    const props = this.defaultProp ? {
+      [this.defaultProp]: this.read(value),
+    } : {};
+
+    const Component = this.Component;
+
+    return <FHCenter><Component { ...props } /></FHCenter>;
+  }
+
+  format(value) {
+    return this.read(value);
+  }
+
+  invalid(value) {
+    return this.read(value);
+  }
+
+  renderDetails(value) {
+    return this.read(value);
+  }
 }
 
-function valuedEnumDataType(field, title, Enum, declaration, shape = {}) {
-  return enumDataType(field, title, Enum, PropTypes.shape({
-    ...shape,
-    value: MyPropTypes.enum(declaration),
-  }), "value");
+export class PercentType extends ComponentType {
+  constructor(title, Percent, shape, accessor) {
+    super(title, Percent, accessor === "" ? MyPropTypes.percent : PropTypes.shape({
+      ...shape,
+      [accessor]: MyPropTypes.percent,
+    }), accessor, "level");
+  }
+
+  format(value) {
+    return super.read(value) + "%";
+  }
+
+  invalid(value) {
+    return super.read(value) < 15;
+  }
 }
 
-function simpleEnumDataType(field, title, Enum, declaration) {
-  return enumDataType(field, title, Enum, "", MyPropTypes.enum(declaration));
+export class LevelPercentType extends PercentType {
+  constructor(title, Percent, shape) {
+    super(title, Percent, shape, "level");
+  }
 }
 
-const DataTypes = {
-  string: stringDataType,
-  level: levelDataType,
-  enum: enumDataType,
-  valuedEnum: valuedEnumDataType,
-  simpleEnum: simpleEnumDataType,
-};
+export class EnumType extends ComponentType {
+  constructor(title, Enum, declaration, map, shape, accessor) {
+    super(title, Enum, accessor ? MyPropTypes.enum(declaration) : PropTypes.shape({
+      ...shape,
+      [accessor]: MyPropTypes.enum(declaration),
+    }), accessor, "value");
+    this.declaration = declaration;
+    this.map = map;
+  }
 
-export default DataTypes;
+  mapped(value) {
+    return this.declaration[this.read(value)];
+  }
+
+  format(value) {
+    return this.mapped(value).title;
+  }
+}
+
+export class ValueEnumType extends EnumType {
+  constructor(title, Enum, map, declaration, shape) {
+    super(title, Enum, declaration, map, shape, "value");
+  }
+}
