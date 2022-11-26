@@ -4,6 +4,7 @@ import InnerEnum from "./Enum";
 import InnerPercent from "./Percent";
 import InnerTooltipCircle from "./TooltipCircle";
 export { _get } from "./utils";
+export { FHCenter } from "./data-types";
 
 export const MyPropTypes = PropTypes;
 export const Enum = InnerEnum;

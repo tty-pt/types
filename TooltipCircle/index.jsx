@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Tooltip } from "@material-ui/core";
-import MyPropTypes from "lib/my-prop-types";
+import MyPropTypes from "../prop-types";
 import Circle from "./Circle";
 
 export default function TooltipCircle(props) {
