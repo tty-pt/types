@@ -3,9 +3,8 @@ export {
   StringType,
   ComponentType,
   PercentType,
-  LevelPercentType,
   EnumType,
-  ValueEnumType,
+  RecurseBoolType,
 } from "./data-types";
 import PropTypes from "./prop-types";
 import InnerEnum from "./Enum";
