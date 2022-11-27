@@ -5,12 +5,245 @@ import MaterialTable from "material-table";
 import { Tooltip } from "@material-ui/core";
 
 const invalidStyle = {
-  backgroundColor: "#f0afbe",
-}; // TODO make this a CSS class
+  color: "#ff9386",
+};
+
+const flexStyle = {
+  display: "flex",
+  alignItems: "center",
+};
+
+const valueStyle = {
+  marginRight: "8px",
+};
+
+const headerStyle = {
+  ...flexStyle,
+  ...valueStyle,
+  fontWeight: "bold",
+};
+
+const innerContainerStyles = {
+  marginLeft: "8px",
+  boxShadow: "0px 0px 3px rgba(0, 0, 0, 0.5)",
+};
+
+const markStyles = {
+  color: "inherit",
+  fontWeight: "bold",
+  backgroundColor: "inherit",
+};
 
 export default function makeTable(types) {
+  function Details(props) {
+    const {
+      table, rowData, style, details, titleFormat = title => title + ": ",
+    } = props;
+
+    function mapDetailsTable(field, value, type) {
+      const isInvalid = type.invalid(value);
+      const cellStyle = isInvalid ? invalidStyle : {};
+
+      const recurseEl = type.types ? (
+        <tr key={field + "-types"}>
+          <td colSpan="2">
+            <table
+              style={{
+                ...innerContainerStyles,
+                width: "100%",
+              }}
+            >
+              <tbody>
+                {
+                  Object.keys(value)
+                    .map(key => mapDetailsTable(key, value[key], type.types[key]))
+                }
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      ) : null;
+
+      function Component(props) {
+        const { value, tooltip, children } = props;
+
+        const tooltipEl = tooltip ? tooltip.split("\n").map((line, idx) => (
+          <div key={idx}>{line}</div>
+        )) : null;
+
+        return (<>
+          <tr key={field}>
+            <td style={headerStyle}>
+              <span style={valueStyle}>
+                {type.renderValue(value)}
+              </span>
+              <span>
+                { titleFormat(type.detailsTitle) }
+              </span>
+            </td>
+            <td style={cellStyle}>
+              {
+                tooltipEl ? (
+                  <Tooltip title={tooltipEl}>
+                    <span style={flexStyle}>
+                      <span>{ children }</span>
+                      <mark style={markStyles}>*</mark>
+                    </span>
+                  </Tooltip>
+                ) : children
+              }
+            </td>
+          </tr>
+          { recurseEl }
+        </>);
+      }
+
+      Component.propTypes = {
+        tooltip: PropTypes.string,
+        children: PropTypes.node,
+        value: PropTypes.any,
+      };
+
+      return (<Component value={value} tooltip={type.detailsTooltip && type.detailsTooltip(value)} key={field}>
+        { type.format(value) }
+      </Component>);
+    }
+
+    // MAP_DETAILS_NO_TABLE
+
+    function mapDetailsNoTable(field, value, type) {
+      const isInvalid = type.invalid(value);
+      const cellStyle = isInvalid ? invalidStyle : {};
+
+      const recurseEl = type.types ? (
+        <div style={innerContainerStyles} key={field + "-types"}>
+          {
+            Object.keys(value)
+              .map(key => mapDetailsNoTable(key, value[key], type.types[key]))
+          }
+        </div>
+      ) : null;
+
+      function Component(props) {
+        const { value, tooltip, children } = props;
+
+        const tooltipEl = tooltip ? tooltip.split("\n").map((line, idx) => (
+          <div key={idx}>{line}</div>
+        )) : null;
+
+        return (<>
+          <div key={field} style={flexStyle}>
+            <span style={headerStyle}>
+              <span style={valueStyle}>
+                { type.renderValue(value) }
+              </span>
+              <span>
+                { titleFormat(type.detailsTitle) }
+              </span>
+            </span>
+            <span style={cellStyle}>
+              {
+                tooltipEl ? (
+                  <Tooltip title={tooltipEl}>
+                    <span style={flexStyle}>
+                      <span>{ children }</span>
+                      <mark style={markStyles}>*</mark>
+                    </span>
+                  </Tooltip>
+                ) : children
+              }
+            </span>
+          </div>
+          { recurseEl }
+        </>);
+      }
+
+      Component.propTypes = {
+        value: PropTypes.any,
+        tooltip: PropTypes.string,
+        children: PropTypes.node,
+      };
+
+      return (<Component
+        value={value}
+        tooltip={type.detailsTooltip && type.detailsTooltip(value)}
+        key={field}
+      >
+        <div>{ type.format(value) }</div>
+      </Component>);
+    }
+
+    const mapDetails = table ? mapDetailsTable : mapDetailsNoTable;
+    const detailsEl = details.map(key => mapDetails(key, rowData[key], types[key]));
+
+    if (table)
+      return (<table style={style}>
+        <tbody>
+          { detailsEl }
+        </tbody>
+      </table>);
+    else
+      return <>{detailsEl}</>;
+  }
+
+  Details.propTypes = {
+    rowData: PropTypes.object,
+    details: PropTypes.arrayOf(PropTypes.string),
+    style: MyPropTypes.style,
+    table: PropTypes.bool,
+    titleFormat: PropTypes.func,
+  };
+
   function Table(props) {
-    const { data, columns, title, options, icons, actions, detailPanel } = props;
+    const { data, columns, title, details, options, icons, actions } = props;
+    const { typedDetails = {} } = options;
+    const { table, spacing = 16, parentStyle = {} } = typedDetails;
+
+    const realParentStyle = {
+      ...parentStyle,
+      overflow: "hidden",
+    };
+
+    const sideStyles = {
+      width: "calc((100% - " + spacing + "px) / " + details.length + ")",
+      float: "left",
+    };
+
+    function tableDetails(key, styles, rowData, details) {
+      return (<Details
+        key={key}
+        style={{
+          ...styles,
+          tableLayout: "fixed",
+        }}
+        details={details}
+        rowData={rowData}
+        table
+      />);
+    }
+
+    function noTableDetails(key, styles, rowData, details) {
+      return (<div key={key} style={styles}>
+        <Details
+          details={details}
+          rowData={rowData}
+        />
+      </div>);
+    }
+
+    const renderDetails = table ? tableDetails : noTableDetails;
+
+    const notLastStyles = {
+      ...sideStyles,
+      marginRight: spacing + "px",
+    };
+
+    function detailPanel(rowData) {
+      return (<div style={realParentStyle}>
+        { details.slice(0, -1).map((detail, idx) => renderDetails(idx, notLastStyles, rowData, detail)) }
+        { renderDetails("last", sideStyles, rowData, details[details.length - 1]) }
+      </div>);
+    }
 
     const newColumns = columns.map(field => {
       return {
@@ -39,57 +272,8 @@ export default function makeTable(types) {
     options: PropTypes.object,
     icons: PropTypes.object,
     actions: PropTypes.array,
-    detailPanel: PropTypes.func,
+    details: PropTypes.array,
   };
 
-  function TableDetails(props) {
-    const { rowData, details, className, style } = props;
-
-    const detailsEl = details.map(field => {
-      const type = types[field];
-      const value = rowData[field];
-      const isInvalid = type.invalid(value);
-
-      if (type.detailsTooltip) {
-        const title = type.detailsTooltip(value);
-
-        if (title) {
-          const tooltipEl = title.split("\n").map(line => (
-            <div key={line}>{line}</div>
-          ));
-
-          return (<tr key={field}>
-            <td>{ type.title }</td> 
-            <td style={isInvalid ? invalidStyle : {}}>
-              <Tooltip title={tooltipEl}>
-                <div>{ type.format(value) }</div>
-              </Tooltip>
-            </td>
-          </tr>);
-        }
-      }
-
-      return (<tr key={field}>
-        <td>{ type.title }</td> 
-        <td style={isInvalid ? invalidStyle : {}}>
-          { type.format(value) }
-        </td>
-      </tr>);
-    });
-
-    return (<table className={className} style={style}>
-      <tbody>
-        { detailsEl }
-      </tbody>
-    </table>);
-  }
-
-  TableDetails.propTypes = {
-    rowData: PropTypes.object,
-    details: PropTypes.arrayOf(PropTypes.string),
-    className: PropTypes.string,
-    style: MyPropTypes.style,
-  };
-
-  return { Table, TableDetails };
+  return Table;
 }

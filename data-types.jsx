@@ -1,7 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import MyPropTypes from "./prop-types";
-import { _get } from "./utils";
 
 function TextCenter(props) {
   const { children } = props;
@@ -32,15 +30,19 @@ FHCenter.propTypes = {
 export class IntegerType {
   constructor(title) {
     this.title = title;
-    this.propType = MyPropTypes.integer;
+    this.detailsTitle = title;
+  }
+
+  read(value) {
+    return value;
+  }
+
+  renderValue(value) {
+    return value;
   }
 
   renderColumn(value) {
-    return <TextCenter>{value}</TextCenter>;
-  }
-
-  renderDetails(value) {
-    return value;
+    return <TextCenter>{this.renderValue(value)}</TextCenter>;
   }
 
   format(value) {
@@ -55,7 +57,6 @@ export class IntegerType {
 export class StringType extends IntegerType {
   constructor(title) {
     super(title);
-    this.propType = PropTypes.string;
   }
 
   invalid(value) {
@@ -64,29 +65,24 @@ export class StringType extends IntegerType {
 }
 
 export class ComponentType extends StringType {
-  constructor(title, Component, propType, accessor, defaultProp) {
+  constructor(title, Component) {
     super(title);
-    this.propType = propType;
-    this.accessor = accessor || "";
-    this.defaultProp = defaultProp || "";
+    this.defaultProp = "value";
     this.Component = Component;
   }
 
-  read(value) {
-    return _get(value, this.accessor);
-    // if (typeof value === "object") 
-    // else
-    //   return value;
-  }
-
-  renderColumn(value) {
-    const props = this.defaultProp ? {
+  renderValue(value) {
+    const props = {
       [this.defaultProp]: this.read(value),
-    } : {};
+    };
 
     const Component = this.Component;
 
-    return <FHCenter><Component { ...props } /></FHCenter>;
+    return <Component { ...props } />;
+  }
+
+  renderColumn(value) {
+    return <FHCenter>{ this.renderValue(value) }</FHCenter>;
   }
 
   format(value) {
@@ -94,49 +90,33 @@ export class ComponentType extends StringType {
   }
 
   invalid(value) {
-    return this.read(value);
-  }
-
-  renderDetails(value) {
     return this.read(value);
   }
 }
 
 export class PercentType extends ComponentType {
-  constructor(title, Percent, shape, accessor) {
-    super(title, Percent, accessor === "" ? MyPropTypes.percent : PropTypes.shape({
-      ...shape,
-      [accessor]: MyPropTypes.percent,
-    }), accessor, "level");
+  constructor(title, Percent) {
+    super(title, Percent);
+    this.defaultProp = "level";
   }
 
   format(value) {
-    return super.read(value) + "%";
+    return this.read(value) + "%";
   }
 
   invalid(value) {
-    return super.read(value) < 15;
-  }
-}
-
-export class LevelPercentType extends PercentType {
-  constructor(title, Percent, shape) {
-    super(title, Percent, shape, "level");
+    return this.read(value) < 15;
   }
 }
 
 export class EnumType extends ComponentType {
-  constructor(title, Enum, declaration, map, shape, accessor) {
-    super(title, Enum, accessor ? MyPropTypes.enum(declaration) : PropTypes.shape({
-      ...shape,
-      [accessor]: MyPropTypes.enum(declaration),
-    }), accessor, "value");
-    this.declaration = declaration;
+  constructor(title, Enum, map) {
+    super(title, Enum);
     this.map = map;
   }
 
   mapped(value) {
-    return this.declaration[this.read(value)];
+    return this.map[this.read(value)];
   }
 
   format(value) {
@@ -144,8 +124,29 @@ export class EnumType extends ComponentType {
   }
 }
 
-export class ValueEnumType extends EnumType {
-  constructor(title, Enum, map, declaration, shape) {
-    super(title, Enum, declaration, map, shape, "value");
+export class RecurseBoolType extends EnumType {
+  constructor(title, Enum, map, types, badState) {
+    super(title, Enum, map);
+    this.types = types;
+    this.goodState = 0;
+    this.badState = badState;
+  }
+
+  read(value) {
+    return this.invalid(value) ? this.badState : this.goodState;
+  }
+
+  invalid(value) {
+    const entries = Object.entries(value);
+
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const [ key, value ] = entry;
+      const type = this.types[key];
+      if (type.invalid(value))
+        return true;
+    }
+
+    return false;
   }
 }
