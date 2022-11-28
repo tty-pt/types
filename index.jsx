@@ -11,7 +11,6 @@ import InnerEnum from "./Enum";
 import InnerPercent from "./Percent";
 import InnerTooltipCircle from "./TooltipCircle";
 import InnerTable from "./Table";
-export { _get } from "./utils";
 
 export const Table = InnerTable;
 export const MyPropTypes = PropTypes;
