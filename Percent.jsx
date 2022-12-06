@@ -6,8 +6,7 @@ import MyPropTypes from "./prop-types";
 export default function Percent(props) {
   const { icons, level } = props;
   const Icon = icons[Math.round(level * icons.length / 100)];
-  const color = level < 15 ? "error" : "inherit";
-  return <Tooltip title={level + "%"}><Icon color={color} /></Tooltip>;
+  return <Tooltip title={level + "%"}><Icon /></Tooltip>;
 }
 
 Percent.propTypes = {
