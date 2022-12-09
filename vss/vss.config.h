@@ -9,11 +9,8 @@ COLOR(invalid)
 OUTLINE(border)
 TABLE_LAYOUT(fixed)
 FULL_SIZE_horizontal
-OVERFLOW(hidden)
-TEXT_OVERFLOW(ellipsis)
 mark.mark {
 	color: inherit;
 	font-weight: bold;
 	background-color: inherit;
 }
-.tnow { white-space: nowrap; }
