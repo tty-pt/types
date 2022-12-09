@@ -7,8 +7,11 @@
 .ouborder { outline: solid thin rgba(81, 81, 81, 1); }
 .tblf { table-layout: fixed; }
 .shf { width: 100%; }
+.oh { overflow: hidden; }
+.toe { text-overflow: ellipsis; }
 mark.mark {
  color: inherit;
  font-weight: bold;
  background-color: inherit;
 }
+.tnow { white-space: nowrap; }

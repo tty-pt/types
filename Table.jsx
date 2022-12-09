@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
+import MaybeTip from "./MaybeTip";
 import MaterialTable from "material-table";
-import { Tooltip } from "@material-ui/core";
 import "./vim.css";
 
 const defaultContainerClass = "ouborder ml8";
@@ -9,31 +9,7 @@ const defaultHeaderClass = "f fic h8";
 const defaultInvalidClass = "cfinvalid";
 const defaultTitleClass = "tb";
 const defaultDetailsClass = "p h";
-const defaultMarkClass = "mark";
 const defaultTableClass = "tblf shf";
-
-function MaybeTooltip(props) {
-  const { tooltip, children, markClass } = props;
-
-  const tooltipEl = tooltip ? tooltip.split("\n").map((line, idx) => (
-    <div key={idx}>{line}</div>
-  )) : null;
-
-  return tooltipEl ? (
-    <Tooltip title={tooltipEl}>
-      <span className="f fic">
-        <span>{ children }</span>
-        <mark className={markClass}>*</mark>
-      </span>
-    </Tooltip>
-  ) : children;
-}
-
-MaybeTooltip.propTypes = {
-  tooltip: PropTypes.string,
-  children: PropTypes.node,
-  markClass: PropTypes.string,
-};
 
 function Details(props) {
   const {
@@ -46,8 +22,8 @@ function Details(props) {
     invalidClass = defaultInvalidClass,
     titleClass = defaultTitleClass,
     headerClass = defaultHeaderClass,
-    markClass = defaultMarkClass,
     tableClass = defaultTableClass,
+    Tooltip = MaybeTip,
     renderValue,
     table,
   } = config;
@@ -82,7 +58,7 @@ function Details(props) {
               </span>
             </td>
             <td className={cellClass}>
-              <MaybeTooltip markClass={markClass} tooltip={tooltip}>{ children }</MaybeTooltip>
+              <Tooltip tooltip={tooltip}>{ children }</Tooltip>
             </td>
           </tr>
           { recurseEl }
@@ -119,7 +95,7 @@ function Details(props) {
               { titleFormat(type.detailsTitle) }
             </span>
             <span className={cellClass}>
-              <MaybeTooltip markClass={markClass} tooltip={tooltip}>{ children }</MaybeTooltip>
+              <Tooltip tooltip={tooltip}>{ children }</Tooltip>
             </span>
           </div>
           { recurseEl }
@@ -151,7 +127,7 @@ function Details(props) {
       tooltip={type.detailsTooltip && type.detailsTooltip(value)}
       key={field}
     >
-      <div>{ type.format(value) }</div>
+      { type.format(value) }
     </Component>);
   }
 
