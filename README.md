@@ -35,10 +35,10 @@ The idea is that this way you only need to define small things for differing typ
 Depending on the situation, you might have to define some methods in your custom type class.
 
 - read(value)
-	This is a way to define an acessor for the value of the type. The return value of this function is used to render the column and also details icon. It is also used in other situations, depending on the type.
+> This is a way to define an acessor for the value of the type. The return value of this function is used to render the column and also details icon. It is also used in other situations, depending on the type.
 
 - format(value)
-	The return value of this method is used to print out textual information in the details.
+> The return value of this method is used to print out textual information in the details.
 
 - invalid(value)
-	If this function's return value is true, the textual information mentioned above has "invalid" styling.
+> If this function's return value is true, the textual information mentioned above has "invalid" styling.
