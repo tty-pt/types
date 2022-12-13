@@ -1,6 +1,6 @@
 {
   "name": "react-data-types",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "build/main.js",
   "scripts": {
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/quirinpa/data-types.git"
+    "url": "git+https://github.com/quirinpa/react-data-types.git"
   },
   "keywords": [
     "react",
@@ -23,9 +23,9 @@
   "author": "quirinpa",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/quirinpa/data-types/issues"
+    "url": "https://github.com/quirinpa/react-data-types/issues"
   },
-  "homepage": "https://github.com/quirinpa/data-types#readme",
+  "homepage": "https://github.com/quirinpa/react-data-types#readme",
   "devDependencies": {
     "@hot-loader/react-dom": "^16.0.0",
     "react-noscripts": "^0.1.102"
