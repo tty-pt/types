@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import MaybeTip from "./MaybeTip";
 import MaterialTable from "material-table";
-import "./vim.css";
+import "./styles/vim.css";
 
 const defaultContainerClass = "ouborder ml8";
 const defaultHeaderClass = "f fic h8";
