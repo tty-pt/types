@@ -15,6 +15,5 @@ module.exports = function (env) {
     }
   })());
 
-  console.log(Object.keys(require("./package.json").peerDependencies).reduce((a, key) => ({ ...a, [key]: key }), {}), config.externals);
   return config;
 };
