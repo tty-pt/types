@@ -1,17 +1,17 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.0.1-21",
+  "version": "0.0.1-22",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "build/main.js",
   "scripts": {
     "test": "scripts test",
-    "start": "scripts start",
+    "watch": "scripts watch",
     "build": "scripts build",
     "lint": "scripts lint"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/quirinpa/react-data-types.git"
+    "url": "git+https://github.com/tty-pt/types.git"
   },
   "keywords": [
     "react",
@@ -23,20 +23,20 @@
   "author": "quirinpa",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/quirinpa/react-data-types/issues"
+    "url": "https://github.com/tty-pt/types/issues"
   },
-  "homepage": "https://github.com/quirinpa/react-data-types#readme",
+  "homepage": "https://github.com/tty-pt/types#readme",
   "devDependencies": {
     "@hot-loader/react-dom": "^16.0.0",
-    "@tty-pt/scripts": "^0.0.1-4"
+    "@tty-pt/scripts": "^0.0.1-6"
   },
   "peerDependencies": {
     "@material-ui/core": "^4.12.4",
     "@material-ui/icons": "^4.11.3",
     "@tty-pt/styles": "^0.0.1-0",
-    "material-table": "^1.63.0",
-    "prop-types": "^15.7.2",
-    "react": "^16.0.0",
-    "react-dom": "^16.0.0"
+    "material-table": "^1.69.3",
+    "prop-types": "^15.8.1",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0"
   }
 }
