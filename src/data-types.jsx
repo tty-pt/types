@@ -1,5 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
+import { Button, Toggle, Paper, IconButton, InputBase, Chip } from "@material-ui/core";
+import SearchIcon from "@material-ui/icons/Search";
+import { cast as c } from "@tty-pt/styles";
+import { enumCount } from "./utils";
 
 function TextCenter(props) {
   const { children } = props;
@@ -27,6 +31,23 @@ FHCenter.propTypes = {
   children: PropTypes.node,
 };
 
+function Filter(props) {
+  const { appClasses, label, active, value, ...rest } = props;
+
+  return (<Chip
+    label={`${label} (${value})`}
+    className={active ? appClasses.chipActive : appClasses.chip}
+    { ...rest }
+  />);
+}
+
+Filter.propTypes = {
+  appClasses: PropTypes.object,
+  label: PropTypes.string,
+  value: PropTypes.any,
+  active: PropTypes.bool,
+};
+
 export class IntegerType {
   constructor(title) {
     this.title = title;
@@ -51,6 +72,26 @@ export class IntegerType {
 
   invalid(value) {
     return value;
+  }
+
+  Filter(props) {
+    const { type, appClasses } = props;
+    const [ value, setValue ] = useState("");
+
+    return (
+      <Paper className={c(appClasses, "horizontal0")}>
+        <IconButton aria-label={type.title}>
+          <SearchIcon />
+        </IconButton>
+
+        <InputBase
+          value={value}
+          placeholder={type.title}
+          inputProps={{ "aria-label": type.title }}
+          onChange={e => setValue(e.target.value)}
+        />
+      </Paper>
+    );
   }
 }
 
@@ -110,8 +151,9 @@ export class PercentType extends ComponentType {
 }
 
 export class EnumType extends ComponentType {
-  constructor(title, Enum, map) {
+  constructor(title, Enum, declaration, map) {
     super(title, Enum);
+    this.declaration = declaration;
     this.map = map;
   }
 
@@ -122,11 +164,34 @@ export class EnumType extends ComponentType {
   format(value) {
     return this.mapped(value).title;
   }
+
+  Filter(props) {
+    const { type, appClasses, dataKey, data } = props;
+    const [ filter, setFilter ] = useState(null);
+    const numbers = enumCount(type.declaration, data, dataKey);
+
+    const filtersEl = Object.values(type.declaration).map(key => (
+      <Filter
+        key={key}
+        appClasses={appClasses}
+        label={type.map[key].title}
+        value={numbers[key]}
+        active={filter === key}
+        onClick={filter === key ? () => setFilter(null) : () => setFilter(key)}
+      />
+    ));
+
+    return (
+      <div className={c(appClasses, "horizontal0 flexWrap")}>
+        { filtersEl }
+      </div>
+    );
+  }
 }
 
 export class RecurseBoolType extends EnumType {
-  constructor(title, Enum, map, types, badState) {
-    super(title, Enum, map);
+  constructor(title, Enum, declaration, map, types, badState) {
+    super(title, Enum, declaration, map);
     this.types = types;
     this.goodState = 0;
     this.badState = badState;
@@ -148,5 +213,47 @@ export class RecurseBoolType extends EnumType {
     }
 
     return false;
+  }
+}
+
+export class ButtonType extends ComponentType {
+  constructor(title, onClick) {
+    super(title, null);
+    this.onClick = onClick;
+  }
+
+  renderValue() {
+    return (<Button onClick={this.onClick}>
+      { this.title }
+    </Button>);
+  }
+}
+
+export class ModalType extends ButtonType {
+  constructor(title, onClick, Modal) {
+    super(title, onClick);
+    this.Modal = Modal;
+  }
+}
+
+export class BaseToggleType extends ButtonType {
+  constructor(title, onClick, Toggle) {
+    super(title, onClick);
+    this.Toggle = Toggle;
+  }
+
+  renderValue(value) {
+    const Toggle = this.Toggle;
+
+    return (<div>
+      { this.title }
+      <Toggle onToggle={this.onClick} toggle={this.read(value)} />
+    </div>);
+  }
+}
+
+export class ToggleType extends BaseToggleType {
+  constructor(title, onClick) {
+    super(title, onClick, Toggle);
   }
 }
