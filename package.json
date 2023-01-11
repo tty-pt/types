@@ -1,13 +1,13 @@
 {
-  "name": "react-data-types",
-  "version": "0.0.6",
+  "name": "@tty-pt/types",
+  "version": "0.0.1-19",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "build/main.js",
   "scripts": {
-    "test": "react-noscripts test",
-    "start": "react-noscripts start",
-    "build": "react-noscripts build",
-    "lint": "react-noscripts lint"
+    "test": "scripts test",
+    "start": "scripts start",
+    "build": "scripts build",
+    "lint": "scripts lint"
   },
   "repository": {
     "type": "git",
@@ -28,10 +28,12 @@
   "homepage": "https://github.com/quirinpa/react-data-types#readme",
   "devDependencies": {
     "@hot-loader/react-dom": "^16.0.0",
-    "react-noscripts": "^0.1.102"
+    "@tty-pt/scripts": "^0.0.1-2"
   },
   "peerDependencies": {
     "@material-ui/core": "^4.12.4",
+    "@material-ui/icons": "^4.11.3",
+    "@tty-pt/styles": "^0.0.1",
     "material-table": "^1.63.0",
     "prop-types": "^15.7.2",
     "react": "^16.0.0",

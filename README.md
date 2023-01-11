@@ -1,18 +1,18 @@
-# react-data-types
+# @tty-pt/types
 > Automate table and filter creation and other things by having your data models in the client.
 
 This library is intended to facilitate rendering tables and table details by declaring types of data for each of the columns, as well as for what they might represent in the details view.
 
 # Installation
 ```sh
-npm i --save react-data-types
+npm i --save @tty-pt/types
 ```
 
 # Usage
 The following example will show a simple table and its details:
 
 ```js
-import { StringType, Table } from "react-data-types";
+import { StringType, Table } from "@tty-pt/types"
 
 export default function NameTable() {
 	return (<Table 
