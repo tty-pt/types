@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import { Button, Toggle, Paper, IconButton, InputBase, Chip } from "@material-ui/core";
 import SearchIcon from "@material-ui/icons/Search";
@@ -74,9 +74,12 @@ export class IntegerType {
     return value;
   }
 
+  filter(value, filterValue) {
+    return filterValue === undefined || this.read(value) === filterValue;
+  }
+
   Filter(props) {
-    const { type, appClasses } = props;
-    const [ value, setValue ] = useState("");
+    const { type, value, onChange, appClasses } = props;
 
     return (
       <Paper className={c(appClasses, "horizontal0")}>
@@ -88,7 +91,7 @@ export class IntegerType {
           value={value}
           placeholder={type.title}
           inputProps={{ "aria-label": type.title }}
-          onChange={e => setValue(e.target.value)}
+          onChange={e => onChange(e.target.value)}
         />
       </Paper>
     );
@@ -98,10 +101,15 @@ export class IntegerType {
 export class StringType extends IntegerType {
   constructor(title) {
     super(title);
+    this.initialFilter = "";
   }
 
   invalid(value) {
     return !value;
+  }
+
+  filter(value, filterValue) {
+    return this.read(value).startsWith(filterValue);
   }
 }
 
@@ -110,6 +118,7 @@ export class ComponentType extends StringType {
     super(title);
     this.defaultProp = "value";
     this.Component = Component;
+    delete this.initialFilter;
   }
 
   renderValue(value) {
@@ -165,9 +174,12 @@ export class EnumType extends ComponentType {
     return this.mapped(value).title;
   }
 
+  filter(value, filterValue) {
+    return filterValue === undefined || this.read(value) === filterValue;
+  }
+
   Filter(props) {
-    const { type, appClasses, dataKey, data } = props;
-    const [ filter, setFilter ] = useState(null);
+    const { type, value, onChange, appClasses, dataKey, data } = props;
     const numbers = enumCount(type.declaration, data, dataKey);
 
     const filtersEl = Object.values(type.declaration).map(key => (
@@ -176,8 +188,8 @@ export class EnumType extends ComponentType {
         appClasses={appClasses}
         label={type.map[key].title}
         value={numbers[key]}
-        active={filter === key}
-        onClick={filter === key ? () => setFilter(null) : () => setFilter(key)}
+        active={value === key}
+        onClick={value === key ? () => onChange() : () => onChange(key)}
       />
     ));
 

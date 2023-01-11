@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { cast as c } from "@tty-pt/styles";
 
 const List = React.forwardRef((props, ref) => {
   const { appClasses, data, types, Component, style, ...rest } = props;
+  const [ filters, setFilters ] = useState(Object.entries(types).reduce((a, [key, type]) => ({
+    ...a,
+    [key]: type.initialFilter,
+  }), {}));
 
   const filtersEl = Object.entries(types).map(([key, type]) => {
     return <type.Filter
@@ -11,11 +15,18 @@ const List = React.forwardRef((props, ref) => {
       dataKey={key}
       data={data}
       type={type}
+      value={filters[key]}
+      onChange={newValue => setFilters({ ...filters, [key]: newValue })}
       appClasses={appClasses}
     />;
   });
 
-  const componentsEl = data.map((item, index) => {
+  const filteredData = data.filter(item => Object.entries(filters).reduce(
+    (a, [key, filterValue]) => a && types[key].filter(item[key], filterValue),
+    true
+  ));
+
+  const componentsEl = filteredData.map((item, index) => {
     return (<Component
       key={index}
       index={index}
