@@ -5,6 +5,12 @@ import SearchIcon from "@material-ui/icons/Search";
 import { cast as c } from "@tty-pt/styles";
 import { enumCount } from "./utils";
 
+function delKey(object, key) {
+  const ret = { ...object };
+  delete ret[key];
+  return ret;
+}
+
 function TextCenter(props) {
   const { children } = props;
 
@@ -162,6 +168,7 @@ export class PercentType extends ComponentType {
 export class EnumType extends ComponentType {
   constructor(title, Enum, declaration, map) {
     super(title, Enum);
+    this.initialFilter = { };
     this.declaration = declaration;
     this.map = map;
   }
@@ -175,7 +182,10 @@ export class EnumType extends ComponentType {
   }
 
   filter(value, filterValue) {
-    return filterValue === undefined || this.read(value) === filterValue;
+    if (!Object.keys(filterValue).length)
+      return true;
+    const rvalue = this.read(value);
+    return filterValue[rvalue];
   }
 
   Filter(props) {
@@ -188,8 +198,11 @@ export class EnumType extends ComponentType {
         appClasses={appClasses}
         label={type.map[key].title}
         value={numbers[key]}
-        active={value === key}
-        onClick={value === key ? () => onChange() : () => onChange(key)}
+        active={value[key]}
+        onClick={value[key] ? () => onChange(delKey(value, key)) : () => onChange({
+          ...value,
+          [key]: true,
+        })}
       />
     ));
 
