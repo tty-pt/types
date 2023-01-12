@@ -37,7 +37,7 @@ const List = React.forwardRef((props, ref) => {
   });
 
   return (<div ref={ref} style={style} className={c(appClasses, "vertical overflowAuto")}>
-    <div className={c(appClasses, "horizontalSmall flexWrap alignItemsCenter")}>
+    <div className={c(appClasses, "horizontalSmall flexWrap alignItemsCenter justifyContentSpaceBetween")}>
       { filtersEl }
     </div>
 
