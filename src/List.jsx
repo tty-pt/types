@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { cast as c } from "@tty-pt/styles";
+import { useCast } from "@tty-pt/styles";
 
 const List = React.forwardRef((props, ref) => {
-  const { appClasses, data, types, Component, style, ...rest } = props;
+  const { data, types, Component, style, ...rest } = props;
+  const c = useCast();
+
   const [ filters, setFilters ] = useState(Object.entries(types).reduce((a, [key, type]) => ({
     ...a,
     [key]: type.initialFilter,
@@ -17,7 +19,6 @@ const List = React.forwardRef((props, ref) => {
       type={type}
       value={filters[key]}
       onChange={newValue => setFilters({ ...filters, [key]: newValue })}
-      appClasses={appClasses}
     />;
   });
 
@@ -30,14 +31,13 @@ const List = React.forwardRef((props, ref) => {
     return (<Component
       key={index}
       index={index}
-      appClasses={appClasses}
       data={item}
       { ...rest }
     />);
   });
 
-  return (<div ref={ref} style={style} className={c(appClasses, "vertical overflowAuto")}>
-    <div className={c(appClasses, "horizontalSmall flexWrap alignItemsCenter justifyContentSpaceBetween")}>
+  return (<div ref={ref} style={style} className={c("vertical overflowAuto")}>
+    <div className={c("horizontalSmall flexWrap alignItemsCenter justifyContentSpaceBetween")}>
       { filtersEl }
     </div>
 
@@ -50,7 +50,6 @@ List.displayName = "List";
 List.propTypes = {
   data: PropTypes.array,
   style: PropTypes.object.isRequired,
-  appClasses: PropTypes.object,
   types: PropTypes.object,
   onClick: PropTypes.object.isRequired,
   Component: PropTypes.elementType,
