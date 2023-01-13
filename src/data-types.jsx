@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Button, Toggle, Paper, IconButton, InputBase, Chip } from "@material-ui/core";
 import SearchIcon from "@material-ui/icons/Search";
-import { cast as c } from "@tty-pt/styles";
+import { useCast } from "@tty-pt/styles";
 import { enumCount } from "./utils";
 
 function delKey(object, key) {
@@ -38,17 +38,17 @@ FHCenter.propTypes = {
 };
 
 function Filter(props) {
-  const { appClasses, label, active, value, ...rest } = props;
+  const { label, active, value, ...rest } = props;
+  const c = useCast();
 
   return (<Chip
     label={`${label} (${value})`}
-    className={active ? appClasses.chipActive : appClasses.chip}
+    className={c(active ? "chipActive" : "chip")}
     { ...rest }
   />);
 }
 
 Filter.propTypes = {
-  appClasses: PropTypes.object,
   label: PropTypes.string,
   value: PropTypes.any,
   active: PropTypes.bool,
@@ -85,10 +85,11 @@ export class IntegerType {
   }
 
   Filter(props) {
-    const { type, value, onChange, appClasses } = props;
+    const { type, value, onChange } = props;
+    const c = useCast();
 
     return (
-      <Paper className={c(appClasses, "horizontal0")}>
+      <Paper className={c("horizontal0")}>
         <IconButton aria-label={type.title}>
           <SearchIcon />
         </IconButton>
@@ -189,13 +190,13 @@ export class EnumType extends ComponentType {
   }
 
   Filter(props) {
-    const { type, value, onChange, appClasses, dataKey, data } = props;
+    const { type, value, onChange, dataKey, data } = props;
+    const c = useCast();
     const numbers = enumCount(type.declaration, data, dataKey);
 
     const filtersEl = Object.values(type.declaration).map(key => (
       <Filter
         key={key}
-        appClasses={appClasses}
         label={type.map[key].title}
         value={numbers[key]}
         active={value[key]}
@@ -207,7 +208,7 @@ export class EnumType extends ComponentType {
     ));
 
     return (
-      <div className={c(appClasses, "horizontal0 flexWrap")}>
+      <div className={c("horizontal0 flexWrap")}>
         { filtersEl }
       </div>
     );

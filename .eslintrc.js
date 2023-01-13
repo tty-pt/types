@@ -1,13 +1,13 @@
 module.exports = {
-  "settings": {
-    "react": {
-      "version": "detect",
-    },
-  },
+	"settings": {
+		"react": {
+			"version": "detect",
+		},
+	},
 	"env": {
 		"browser": true,
 		"es2021": true,
-    "jest": true
+		"jest": true
 	},
 	"extends": [
 		"eslint:recommended",
@@ -17,14 +17,16 @@ module.exports = {
 	],
 	"parserOptions": {
 		"ecmaVersion": "latest",
-		"sourceType": "module"
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true,
+    }
 	},
 	"plugins": [
 		"react"
 	],
 	"rules": {
 		"indent": [
-			// "error",
 			"warn",
 			2
 		],
@@ -32,22 +34,20 @@ module.exports = {
 			"error",
 			"unix"
 		],
-    "quotes": [
-      // "error",
+		"quotes": [
 			"warn",
 			"double"
 		],
 		"semi": [
-			// "error",
 			"warn",
 			"always"
 		],
- 		"react/display-name": 2,
- 		"no-empty": ["error", { "allowEmptyCatch": true }]
+		"react/display-name": 2,
+		"no-empty": ["error", { "allowEmptyCatch": true }]
 	},
-  "ignorePatterns": [
-    "src/i18n/i18next-scanner.config.js",
-    "src/serviceWorker.js",
-    "src/setupProxy.js"
-  ]
+	"ignorePatterns": [
+		"src/i18n/i18next-scanner.config.js",
+		"src/serviceWorker.js",
+		"src/setupProxy.js"
+	]
 };
