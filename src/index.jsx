@@ -9,6 +9,7 @@ export {
   ModalType,
   BaseToggleType,
   ToggleType,
+  DateTimeType,
 } from "./data-types";
 import PropTypes from "./prop-types";
 import InnerEnum from "./Enum";

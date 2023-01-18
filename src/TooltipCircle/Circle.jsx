@@ -1,6 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Typography, } from "@material-ui/core";
 
 export default function Circle(props) {
   const { color, size } = props;
@@ -10,8 +9,7 @@ export default function Circle(props) {
     width: size + "px",
   } : {};
 
-  return (<Typography
-    component="div"
+  return (<div
     style={{
       ...sizeProps,
       backgroundColor: color,
