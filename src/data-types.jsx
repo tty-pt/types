@@ -1,9 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Button, Toggle, Paper, IconButton, InputBase, Chip } from "@material-ui/core";
+import { Button, Toggle, Paper, IconButton, InputBase, Chip, TextField } from "@material-ui/core";
 import SearchIcon from "@material-ui/icons/Search";
 import { useCast } from "@tty-pt/styles";
 import { enumCount } from "./utils";
+
+function toDateTimeLocal(date) {
+  if (!date)
+    return null;
+  const iso = date.toISOString();
+  return iso.substring(0, iso.length - 1);
+}
 
 function delKey(object, key) {
   const ret = { ...object };
@@ -13,8 +20,9 @@ function delKey(object, key) {
 
 function TextCenter(props) {
   const { children } = props;
+  const c = useCast();
 
-  return <div style={{ textAlign: "center" }}>{children}</div>;
+  return <div className={c("textAlignCenter")}>{children}</div>;
 }
 
 TextCenter.propTypes = {
@@ -23,18 +31,41 @@ TextCenter.propTypes = {
 
 function FHCenter(props) {
   const { children } = props;
+  const c = useCast();
 
-  return (<div style={{
-    alignItems: "center",
-    justifyContent: "center",
-    display: "flex"
-  }}>
+  return (<div className={c("horizontal0 justifyContentCenter")}>
     { children }
   </div>);
 }
 
 FHCenter.propTypes = {
   children: PropTypes.node,
+};
+
+function TextFilter(props) {
+  const { type, value, onChange } = props;
+  const c = useCast();
+
+  return (
+    <Paper className={c("horizontal0")}>
+      <IconButton aria-label={type.title}>
+        <SearchIcon />
+      </IconButton>
+
+      <InputBase
+        value={value}
+        placeholder={type.title}
+        inputProps={{ "aria-label": type.title }}
+        onChange={e => onChange(e.target.value)}
+      />
+    </Paper>
+  );
+}
+
+TextFilter.propTypes = {
+  type: PropTypes.any,
+  value: PropTypes.string,
+  onChange: PropTypes.func,
 };
 
 function Filter(props) {
@@ -58,6 +89,7 @@ export class IntegerType {
   constructor(title) {
     this.title = title;
     this.detailsTitle = title;
+    this.mtType = "numeric";
   }
 
   read(value) {
@@ -65,7 +97,7 @@ export class IntegerType {
   }
 
   renderValue(value) {
-    return value;
+    return this.read(value);
   }
 
   renderColumn(value) {
@@ -85,23 +117,7 @@ export class IntegerType {
   }
 
   Filter(props) {
-    const { type, value, onChange } = props;
-    const c = useCast();
-
-    return (
-      <Paper className={c("horizontal0")}>
-        <IconButton aria-label={type.title}>
-          <SearchIcon />
-        </IconButton>
-
-        <InputBase
-          value={value}
-          placeholder={type.title}
-          inputProps={{ "aria-label": type.title }}
-          onChange={e => onChange(e.target.value)}
-        />
-      </Paper>
-    );
+    return <TextFilter { ...props } />;
   }
 }
 
@@ -109,6 +125,7 @@ export class StringType extends IntegerType {
   constructor(title) {
     super(title);
     this.initialFilter = "";
+    this.mtType = "string";
   }
 
   invalid(value) {
@@ -126,6 +143,7 @@ export class ComponentType extends StringType {
     this.defaultProp = "value";
     this.Component = Component;
     delete this.initialFilter;
+    this.mtType = "numeric";
   }
 
   renderValue(value) {
@@ -281,5 +299,61 @@ export class BaseToggleType extends ButtonType {
 export class ToggleType extends BaseToggleType {
   constructor(title, onClick) {
     super(title, onClick, Toggle);
+  }
+}
+
+export class DateTimeType extends StringType {
+  constructor(title) {
+    super(title);
+    this.initialFilter = {};
+    this.mtType = "datetime";
+  }
+
+  read(value) {
+    return toDateTimeLocal(value);
+  }
+
+  invalid(value) {
+    return Object.prototype.toString.call(value) !== "[object Date]" || isNaN(value);
+  }
+
+  filter(value, filterValue) {
+    if (!(filterValue.end && filterValue.start))
+      return true;
+
+    else
+      return value >= filterValue.start && value < filterValue.end;
+  }
+
+  Filter(props) {
+    const { type, value, onChange } = props;
+    const c = useCast();
+
+    return (<Paper className={c("padSmall verticalSmall")}>
+      <TextField
+        label={"Start " + type.title}
+        type="datetime-local"
+        value={toDateTimeLocal(value.start)}
+        onChange={e => onChange({
+          start: new Date(e.target.value),
+          end: value.end,
+        })}
+        InputLabelProps={{
+          shrink: true,
+        }}
+      />
+      <TextField
+        label={"End " + type.title}
+        type="datetime-local"
+        value={toDateTimeLocal(value.end)}
+        onChange={e => onChange({
+          start: value.start,
+          end: new Date(e.target.value),
+        })}
+        InputLabelProps={{
+          shrink: true,
+        }}
+      />
+    </Paper>);
   }
 }

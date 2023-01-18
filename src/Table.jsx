@@ -2,38 +2,47 @@ import React from "react";
 import PropTypes from "prop-types";
 import MaybeTip from "./MaybeTip";
 import MaterialTable from "material-table";
-import "./styles/vim.css";
+import { useCast } from "@tty-pt/styles";
+import useFilters from "./useFilters";
 
-const defaultContainerClass = "ouborder ml8";
-const defaultHeaderClass = "f fic h8";
-const defaultInvalidClass = "cfinvalid";
-const defaultTitleClass = "tb";
-const defaultDetailsClass = "p h";
-const defaultTableClass = "tblf shf";
+const defaultContainerCast = "marginLeftSmall borderTopDivider";
+const defaultHeaderCast = "horizontalSmall alignItemsCenter";
+const defaultInvalidCast = "colorErrorLight";
+const defaultTitleCast = "fontWeightBold";
+const defaultDetailsCast = "pad horizontal flexWrap flexGrowChildren";
+const defaultTableCast = "tableLayoutFixed sizeHorizontalFull";
 
 function Details(props) {
   const {
     rowData, types, details, config,
   } = props;
 
+  const c = useCast();
+
   const {
     titleFormat = title => title + ": ",
-    containerClass = defaultContainerClass,
-    invalidClass = defaultInvalidClass,
-    titleClass = defaultTitleClass,
-    headerClass = defaultHeaderClass,
-    tableClass = defaultTableClass,
+    containerCast = defaultContainerCast,
+    invalidCast = defaultInvalidCast,
+    titleCast = defaultTitleCast,
+    headerCast = defaultHeaderCast,
+    tableCast = defaultTableCast,
     Tooltip = MaybeTip,
     renderValue,
     table,
   } = config;
+
+  const realContainerCast = containerCast + (tableCast ? " " + tableCast : "");
+  const containerClass = c(realContainerCast);
+  const headerClass = c(headerCast);
+  const titleClass = c(titleCast);
+  const invalidClass = c(invalidCast);
 
   const maybeTableMap = {
     [true]: (field, value, type) => {
       const recurseEl = type.types ? (
         <tr key={field + "-types"}>
           <td colSpan="2">
-            <table className={containerClass + " " + tableClass}>
+            <table className={containerClass}>
               <tbody>
                 {
                   Object.keys(value)
@@ -76,7 +85,7 @@ function Details(props) {
     },
     [false]: (field, value, type) => {
       const recurseEl = type.types ? (
-        <div className={containerClass} key={field + "-types"}>
+        <div className={c(containerCast)} key={field + "-types"}>
           {
             Object.keys(value)
               .map(key => mapDetails(key, value[key], type.types[key]))
@@ -134,7 +143,7 @@ function Details(props) {
   const detailsEl = details.map(key => mapDetails(key, rowData[key], types[key]));
 
   if (table)
-    return (<table className={tableClass}>
+    return (<table className={c(tableCast)}>
       <tbody>
         { detailsEl }
       </tbody>
@@ -150,10 +159,13 @@ Details.propTypes = {
   config: PropTypes.object,
 };
 
-export default function Table(props) {
-  const { data, types, columns, title, details, options, icons, actions } = props;
-  const { typedDetails = {} } = options;
-  let { detailsClass = defaultDetailsClass } = typedDetails;
+function DetailsPanel(props) {
+  const {
+    details = [], types = {}, rowData = {},
+    config = {},
+  } = props;
+  const c = useCast();
+  const { detailsCast = defaultDetailsCast } = config;
 
   function renderDetails(key, rowData, details) {
     return (<Details
@@ -161,42 +173,76 @@ export default function Table(props) {
       details={details}
       rowData={rowData}
       types={types}
-      config={typedDetails}
+      config={config}
     />);
   }
 
+  return (<div className={c(detailsCast)}>
+    { details.map((detail, idx) => renderDetails(idx, rowData, detail)) }
+  </div>);
+}
+
+DetailsPanel.propTypes = {
+  details: PropTypes.array,
+  rowData: PropTypes.object,
+  config: PropTypes.object,
+  types: PropTypes.object,
+};
+
+export default function Table(props) {
+  const { data, types, columns, title, details = [], options = {}, icons, actions } = props;
+  const { typedDetails = {} } = options;
+  const { filtersEl, filteredData } = useFilters({ data, types, columns, options: options.filters });
+  const c = useCast();
+
   const div = details.length;
 
-  function detailPanel(rowData) {
-    return (<div className={detailsClass + " xh" + div}>
-      { details.map((detail, idx) => renderDetails(idx, rowData, detail)) }
-    </div>);
-  }
+  const detailPanel = div ? function detailPanel(rowData) {
+    return (<DetailsPanel
+      details={details}
+      types={types}
+      config={typedDetails}
+      rowData={rowData}
+    />);
+  } : [];
 
-  const newColumns = columns.map(field => {
+  const newColumns = Object.keys(columns).map(key => {
+    const type = types[key];
     return {
-      field,
-      render: rowData => types[field].renderColumn(rowData[field]),
-      title: types[field].title,
+      field: key,
+      render: rowData => type.renderColumn(rowData[key]),
+      title: type.title,
+      // type: type.mtType,
       headerStyle: { textAlign: "center" },
     };
   });
 
-  return (<MaterialTable
-    className="typed"
-    title={title}
-    columns={newColumns}
-    data={data}
-    options={options}
-    icons={icons}
-    actions={actions}
-    detailPanel={detailPanel}
-  />);
+  return (<>
+    <div className={c("pad horizontal flexWrap alignItemsCenter justifyContentEnd")}>
+      { filtersEl }
+    </div>
+    
+    <MaterialTable
+      className="typed"
+      title={title}
+      columns={newColumns}
+      data={filteredData}
+      options={{
+        ...options,
+        search: false,
+        filtering: false,
+      }}
+      icons={icons}
+      actions={actions}
+      detailPanel={detailPanel}
+      components={{ Toolbar: () => null }}
+    />
+  </>);
 }
 
 Table.propTypes = {
   title: PropTypes.string,
-  columns: PropTypes.array,
+  columns: PropTypes.object,
   data: PropTypes.array,
   options: PropTypes.object,
   icons: PropTypes.object,
