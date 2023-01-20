@@ -233,12 +233,22 @@ export class EnumType extends ComponentType {
   }
 }
 
-export class RecurseBoolType extends EnumType {
-  constructor(title, Enum, declaration, map, types, badState) {
+export class BoolType extends EnumType {
+  constructor(title, Enum, declaration, map, badState) {
     super(title, Enum, declaration, map);
-    this.types = types;
     this.goodState = 0;
     this.badState = badState;
+  }
+
+  read(value) {
+    return value ? this.badState : this.goodState;
+  }
+}
+
+export class RecurseBoolType extends BoolType {
+  constructor(title, Enum, declaration, map, badState, types) {
+    super(title, Enum, declaration, map, badState);
+    this.types = types;
   }
 
   read(value) {
