@@ -218,7 +218,7 @@ export default function Table(props) {
   });
 
   return (<>
-    <div className={c("pad horizontal flexWrap alignItemsCenter justifyContentEnd")}>
+    <div className={c("horizontal flexWrap alignItemsCenter justifyContentEnd")}>
       { filtersEl }
     </div>
     
