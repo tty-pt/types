@@ -1,6 +1,6 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.0.2-84",
+  "version": "0.0.2-120",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "build/main.js",
   "scripts": {
@@ -37,6 +37,7 @@
     "material-table": "^1.69.3",
     "prop-types": "^15.8.1",
     "react": "^16.14.0",
+    "react-i18next": "^11.11.0",
     "react-dom": "^16.14.0"
   }
 }

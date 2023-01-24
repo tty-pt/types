@@ -1,19 +1,20 @@
 export {
+  extend,
   IntegerType,
   StringType,
   ComponentType,
   PercentType,
   EnumType,
+  BoolType,
   RecurseBoolType,
-  ButtonType,
-  ModalType,
-  BaseToggleType,
-  ToggleType,
+  DictionaryOfType,
+  // ButtonType,
+  // ModalType,
+  // BaseToggleType,
+  // ToggleType,
   DateTimeType,
 } from "./data-types";
 import PropTypes from "./prop-types";
-export { Enum, makeEnum, makeBool, makeRecurseBool } from "./Enum";
-export { Percent, makePercent } from "./Percent";
 import InnerTooltipCircle from "./TooltipCircle";
 import InnerTable from "./Table";
 import InnerList from "./List";
