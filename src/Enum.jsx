@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Tooltip } from "@material-ui/core";
-import MyPropTypes from "./prop-types";
 
 export function Enum(props) {
   const { values, enumKey } = props;
@@ -16,6 +15,6 @@ export function Enum(props) {
 }
 
 Enum.propTypes = {
-  enumKey: MyPropTypes.integer,
+  enumKey: PropTypes.any,
   values: PropTypes.objectOf(PropTypes.any),
 };

@@ -147,6 +147,10 @@ export class IntegerType {
   mock() {
     return Math.floor(Math.random());
   }
+
+  preprocess(value) {
+    return value;
+  }
 }
 
 export class StringType extends IntegerType {
@@ -277,24 +281,25 @@ EnumType.extend = function extendEnum(declaration, map, options = {}) {
 };
 
 export class BoolType extends EnumType {
-  constructor(title, declaration, map, badState) {
-    super(title, declaration, map);
-    this.goodState = 0;
-    this.badState = badState;
+  constructor(title, map) {
+    super(title, {
+      OK: false,
+      ERROR: true,
+    }, map);
   }
 
   read(value) {
-    return value ? this.badState : this.goodState;
+    return !value;
   }
 }
 
-BoolType.extend = function extendBool(declaration, map, badState, options = {}) {
-  return extend(BoolType, [declaration, map, badState], options);
+BoolType.extend = function extendBool(map, options = {}) {
+  return extend(BoolType, [map], options);
 }
 
 export class RecurseBoolType extends BoolType {
-  constructor(title, declaration, map, badState, types) {
-    super(title, declaration, map, badState);
+  constructor(title, map, types) {
+    super(title, map);
     this.types = types;
   }
 
@@ -306,24 +311,24 @@ export class RecurseBoolType extends BoolType {
       const [ key, value ] = entry;
       const type = this.types[key];
       if (type.invalid(value))
-        return this.badState;
+        return true;
     }
 
-    return this.goodState;
+    return false;
   }
 
   invalid(value) {
-    return this.read(value) === this.badState;
+    return this.read(value);
   }
 }
 
-RecurseBoolType.extend = function extendRecurseBool(declaration, map, badState, types, options = {}) {
-  return extend(RecurseBoolType, [declaration, map, badState, types], options);
+RecurseBoolType.extend = function extendRecurseBool(map, types, options = {}) {
+  return extend(RecurseBoolType, [map, types], options);
 }
 
 export class DictionaryOfType extends BoolType {
-  constructor(title, declaration, map, badState, SubType, subTypeArgs) {
-    super(title, declaration, map, badState);
+  constructor(title, map, SubType, subTypeArgs) {
+    super(title, map);
     this.SubType = SubType;
     this.subTypeArgs = subTypeArgs;
   }
@@ -344,8 +349,8 @@ export class DictionaryOfType extends BoolType {
   }
 }
 
-DictionaryOfType.extend = (declaration, map, badState, SubType, options = {}) =>
-  extend(DictionaryOfType, [declaration, map, badState, SubType], options);
+DictionaryOfType.extend = (map, SubType, options = {}) =>
+  extend(DictionaryOfType, [map, SubType], options);
 
 // export class ButtonType extends ComponentType {
 //   constructor(title, onClick) {
