@@ -18,6 +18,8 @@ import PropTypes from "./prop-types";
 import InnerTooltipCircle from "./TooltipCircle";
 import InnerTable from "./Table";
 import InnerList from "./List";
+export { Enum } from "./Enum";
+export { Percent } from "./Percent";
 
 export const Table = InnerTable;
 export const List = InnerList;
