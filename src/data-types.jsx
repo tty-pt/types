@@ -1,9 +1,33 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Button, Toggle, Paper, IconButton, InputBase, Chip, TextField } from "@material-ui/core";
+// import { Button, Toggle, Paper, IconButton, InputBase, Chip, TextField } from "@material-ui/core";
+import { Paper, IconButton, InputBase, Chip, TextField } from "@material-ui/core";
 import SearchIcon from "@material-ui/icons/Search";
 import { useCast } from "@tty-pt/styles";
 import { enumCount } from "./utils";
+import { Percent } from "./Percent";
+import { Enum } from "./Enum";
+
+export
+function extend(DefaultType, passArgs, options) {
+  const { BaseType = DefaultType } = options;
+
+  const Type = options.makeType
+    ? options.makeType(BaseType)
+    : (class SpecificType extends BaseType {
+      constructor(title, ...args) {
+        super(title, ...passArgs, ...args);
+      }
+    });
+
+  Object.assign(Type.prototype, options);
+
+  return Type;
+}
+
+function dec2hex(dec) {
+  return dec.toString(16).padStart(2, "0")
+}
 
 function toDateTimeLocal(date) {
   if (!date)
@@ -105,7 +129,7 @@ export class IntegerType {
   }
 
   format(value) {
-    return value;
+    return "" + value;
   }
 
   invalid(value) {
@@ -118,6 +142,10 @@ export class IntegerType {
 
   Filter(props) {
     return <TextFilter { ...props } />;
+  }
+
+  mock() {
+    return Math.floor(Math.random());
   }
 }
 
@@ -135,25 +163,19 @@ export class StringType extends IntegerType {
   filter(value, filterValue) {
     return this.read(value).startsWith(filterValue);
   }
+
+  mock() {
+    const arr = new Uint8Array(20);
+    window.crypto.getRandomValues(arr);
+    return Array.from(arr, dec2hex).join('');
+  }
 }
 
 export class ComponentType extends StringType {
-  constructor(title, Component) {
+  constructor(title) {
     super(title);
-    this.defaultProp = "value";
-    this.Component = Component;
     delete this.initialFilter;
     this.mtType = "numeric";
-  }
-
-  renderValue(value) {
-    const props = {
-      [this.defaultProp]: this.read(value),
-    };
-
-    const Component = this.Component;
-
-    return <Component { ...props } />;
   }
 
   renderColumn(value) {
@@ -170,9 +192,13 @@ export class ComponentType extends StringType {
 }
 
 export class PercentType extends ComponentType {
-  constructor(title, Percent) {
-    super(title, Percent);
-    this.defaultProp = "level";
+  constructor(title, icons) {
+    super(title);
+    this.icons = icons;
+  }
+
+  renderValue(value) {
+    return <Percent icons={this.icons} level={this.read(value)} />
   }
 
   format(value) {
@@ -180,16 +206,25 @@ export class PercentType extends ComponentType {
   }
 
   invalid(value) {
-    return this.read(value) < 15;
+    const rvalue = this.read(value);
+    return isNaN(rvalue) || rvalue < 0 || rvalue > 100;
   }
 }
 
+PercentType.extend = function extendPercent(icons, options = {}) {
+  return extend(PercentType, [icons], options);
+};
+
 export class EnumType extends ComponentType {
-  constructor(title, Enum, declaration, map) {
-    super(title, Enum);
+  constructor(title, declaration, map) {
+    super(title);
     this.initialFilter = { };
     this.declaration = declaration;
     this.map = map;
+  }
+
+  renderValue(value) {
+    return <Enum values={this.map} enumKey={this.read(value)} />;
   }
 
   mapped(value) {
@@ -231,11 +266,19 @@ export class EnumType extends ComponentType {
       </div>
     );
   }
+
+  invalid(value) {
+    return isNaN(value) || value;
+  }
 }
 
+EnumType.extend = function extendEnum(declaration, map, options = {}) {
+  return extend(EnumType, [declaration, map], options);
+};
+
 export class BoolType extends EnumType {
-  constructor(title, Enum, declaration, map, badState) {
-    super(title, Enum, declaration, map);
+  constructor(title, declaration, map, badState) {
+    super(title, declaration, map);
     this.goodState = 0;
     this.badState = badState;
   }
@@ -245,17 +288,17 @@ export class BoolType extends EnumType {
   }
 }
 
+BoolType.extend = function extendBool(declaration, map, badState, options = {}) {
+  return extend(BoolType, [declaration, map, badState], options);
+}
+
 export class RecurseBoolType extends BoolType {
-  constructor(title, Enum, declaration, map, badState, types) {
-    super(title, Enum, declaration, map, badState);
+  constructor(title, declaration, map, badState, types) {
+    super(title, declaration, map, badState);
     this.types = types;
   }
 
   read(value) {
-    return this.invalid(value) ? this.badState : this.goodState;
-  }
-
-  invalid(value) {
     const entries = Object.entries(value);
 
     for (let i = 0; i < entries.length; i++) {
@@ -263,54 +306,88 @@ export class RecurseBoolType extends BoolType {
       const [ key, value ] = entry;
       const type = this.types[key];
       if (type.invalid(value))
-        return true;
+        return this.badState;
     }
 
-    return false;
+    return this.goodState;
+  }
+
+  invalid(value) {
+    return this.read(value) === this.badState;
   }
 }
 
-export class ButtonType extends ComponentType {
-  constructor(title, onClick) {
-    super(title, null);
-    this.onClick = onClick;
+RecurseBoolType.extend = function extendRecurseBool(declaration, map, badState, types, options = {}) {
+  return extend(RecurseBoolType, [declaration, map, badState, types], options);
+}
+
+export class DictionaryOfType extends BoolType {
+  constructor(title, declaration, map, badState, SubType, subTypeArgs) {
+    super(title, declaration, map, badState);
+    this.SubType = SubType;
+    this.subTypeArgs = subTypeArgs;
   }
 
-  renderValue() {
-    return (<Button onClick={this.onClick}>
-      { this.title }
-    </Button>);
+  read(value) {
+    const subType = new this.SubType("ignoreMe", ...this.subTypeArgs);
+    const keys = Object.keys(value);
+
+    for (let i = 0; i < keys.length; i++)
+      if (subType.invalid(value[keys[i]]))
+        return this.badState;
+
+    return this.goodState;
+  }
+
+  invalid(value) {
+    return this.read(value) === this.badState;
   }
 }
 
-export class ModalType extends ButtonType {
-  constructor(title, onClick, Modal) {
-    super(title, onClick);
-    this.Modal = Modal;
-  }
-}
+DictionaryOfType.extend = (declaration, map, badState, SubType, options = {}) =>
+  extend(DictionaryOfType, [declaration, map, badState, SubType], options);
 
-export class BaseToggleType extends ButtonType {
-  constructor(title, onClick, Toggle) {
-    super(title, onClick);
-    this.Toggle = Toggle;
-  }
+// export class ButtonType extends ComponentType {
+//   constructor(title, onClick) {
+//     super(title, null);
+//     this.onClick = onClick;
+//   }
 
-  renderValue(value) {
-    const Toggle = this.Toggle;
+//   renderValue() {
+//     return (<Button onClick={this.onClick}>
+//       { this.title }
+//     </Button>);
+//   }
+// }
 
-    return (<div>
-      { this.title }
-      <Toggle onToggle={this.onClick} toggle={this.read(value)} />
-    </div>);
-  }
-}
+// export class ModalType extends ButtonType {
+//   constructor(title, onClick, Modal) {
+//     super(title, onClick);
+//     this.Modal = Modal;
+//   }
+// }
 
-export class ToggleType extends BaseToggleType {
-  constructor(title, onClick) {
-    super(title, onClick, Toggle);
-  }
-}
+// export class BaseToggleType extends ButtonType {
+//   constructor(title, onClick, Toggle) {
+//     super(title, onClick);
+//     this.Toggle = Toggle;
+//   }
+
+//   renderValue(value) {
+//     const Toggle = this.Toggle;
+
+//     return (<div>
+//       { this.title }
+//       <Toggle onToggle={this.onClick} toggle={this.read(value)} />
+//     </div>);
+//   }
+// }
+
+// export class ToggleType extends BaseToggleType {
+//   constructor(title, onClick) {
+//     super(title, onClick, Toggle);
+//   }
+// }
 
 export class DateTimeType extends StringType {
   constructor(title) {

@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import MaybeTip from "./MaybeTip";
 import MaterialTable from "material-table";
 import { useCast } from "@tty-pt/styles";
+import { useTranslation } from "react-i18next";
 import useFilters from "./useFilters";
 
 const defaultContainerCast = "marginLeftSmall borderTopDivider";
@@ -18,6 +19,7 @@ function Details(props) {
   } = props;
 
   const c = useCast();
+  const { t } = useTranslation();
 
   const {
     titleFormat = title => title + ": ",
@@ -39,19 +41,25 @@ function Details(props) {
 
   const maybeTableMap = {
     [true]: (field, value, type) => {
-      const recurseEl = type.types ? (
-        <tr key={field + "-types"}>
+      function renderRecurse(getSubInstance) {
+        return (<tr key={field + "-children"}>
           <td colSpan="2">
             <table className={containerClass}>
               <tbody>
                 {
                   Object.keys(value)
-                    .map(key => mapDetails(key, value[key], type.types[key]))
+                    .map(key => mapDetails(key, value[key], getSubInstance(key)))
                 }
               </tbody>
             </table>
           </td>
-        </tr>
+        </tr>);
+      }
+
+      const recurseEl = type.types ? (
+        renderRecurse(key => type.types[key])
+      ) : type.SubType ? (
+        renderRecurse(key => new type.SubType(t(key), ...type.subTypeArgs))
       ) : null;
 
       function Component(props) {
@@ -84,13 +92,19 @@ function Details(props) {
       return Component;
     },
     [false]: (field, value, type) => {
-      const recurseEl = type.types ? (
-        <div className={c(containerCast)} key={field + "-types"}>
+      function renderRecurse(getSubInstance) {
+        return (<div className={c(containerCast)} key={field + "-children"}>
           {
             Object.keys(value)
-              .map(key => mapDetails(key, value[key], type.types[key]))
+              .map(key => mapDetails(key, value[key], getSubInstance(key)))
           }
-        </div>
+        </div>);
+      }
+
+      const recurseEl = type.types ? (
+        renderRecurse(key => type.types[key])
+      ) : type.SubType ? (
+        renderRecurse(key => new type.SubType(t(key), ...type.subTypeArgs))
       ) : null;
 
       function Component(props) {
@@ -190,7 +204,7 @@ DetailsPanel.propTypes = {
 };
 
 export default function Table(props) {
-  const { data, types, columns, title, details = [], options = {}, icons, actions } = props;
+  const { data, types, columns, details = [], options = {}, icons, actions } = props;
   const { typedDetails = {} } = options;
   const { filtersEl, filteredData } = useFilters({ data, types, columns, options: options.filters });
   const c = useCast();
@@ -224,7 +238,7 @@ export default function Table(props) {
     
     <MaterialTable
       className="typed"
-      title={title}
+      title=""
       columns={newColumns}
       data={filteredData}
       options={{
@@ -241,7 +255,6 @@ export default function Table(props) {
 }
 
 Table.propTypes = {
-  title: PropTypes.string,
   columns: PropTypes.object,
   data: PropTypes.array,
   options: PropTypes.object,
