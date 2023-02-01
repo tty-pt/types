@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
+import { Paper } from "@material-ui/core";
 import MaybeTip from "./MaybeTip";
-import MaterialTable from "material-table";
 import { useCast } from "@tty-pt/styles";
 import { useTranslation } from "react-i18next";
 import useFilters from "./useFilters";
+import IconButton from "./IconButton";
 
 const defaultContainerCast = "marginLeftSmall borderTopDivider";
 const defaultHeaderCast = "horizontalSmall alignItemsCenter";
@@ -203,9 +204,89 @@ DetailsPanel.propTypes = {
   types: PropTypes.object,
 };
 
+function Line(props) {
+  const { data, index, types, className, columns } = props;
+  const c = useCast();
+  const colClass = c("pad") + " " + className;
+
+  const columnsEl = Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => {
+    const type = types[key];
+    return (<td className={colClass} key={key}>{ type.renderColumn(value, index, key) }</td>);
+  });
+
+  return (<tr>{columnsEl}</tr>);
+}
+
+Line.propTypes = {
+  data: PropTypes.object.isRequired,
+  index: PropTypes.number.isRequired,
+  types: PropTypes.object.isRequired,
+  columns: PropTypes.object.isRequired,
+  className: PropTypes.string,
+};
+
+function ExpandLine(props) {
+  const { data, index, types, className, icons, detailPanel, columns } = props;
+  const [ open, setOpen ] = useState(false);
+  const c = useCast();
+  const colClass = c("pad") + " " + className;
+
+  const columnsEl = [(
+    <td key="expand" className={colClass}>
+      <IconButton
+        iconClassName={open ? c("rotatePiOverTwo") : ""}
+        Component={icons.DetailPanel}
+        onClick={() => setOpen(!open)}
+      />
+    </td>
+  )].concat(Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => {
+    const type = types[key];
+    return (<td key={key} className={colClass}>
+      { type.renderColumn(value, index, key) }
+    </td>);
+  }));
+
+  if (open)
+    return (<>
+      <tr>{columnsEl}</tr>
+      <tr><td className={className} colSpan={columnsEl.length}>{detailPanel(data)}</td></tr>
+    </>)
+
+  else
+    return <tr>{columnsEl}</tr>;
+}
+
+ExpandLine.propTypes = {
+  data: PropTypes.object.isRequired,
+  index: PropTypes.number.isRequired,
+  types: PropTypes.object.isRequired,
+  className: PropTypes.string,
+  icons: PropTypes.object.isRequired,
+  detailPanel: PropTypes.func.isRequired,
+  columns: PropTypes.object.isRequired,
+};
+
+export const defaultFiltersCast = "horizontal flexWrap alignItemsCenter justifyContentEnd";
+
+function DefaultFilters(props) {
+  const { children } = props;
+  const c = useCast();
+
+  return (
+    <div className={c(defaultFiltersCast)}>
+      { children }
+    </div>
+  );
+}
+
+DefaultFilters.propTypes = {
+  children: PropTypes.node,
+};
+
 export default function Table(props) {
-  const { data, types, columns, details = [], options = {}, icons, actions } = props;
-  const { typedDetails = {} } = options;
+  const { data, types, columns, details = [], options = {}, icons } = props;
+  const { components = {}, typedDetails = {} } = options;
+  const { Filters = DefaultFilters } = components;
   const { filtersEl, filteredData } = useFilters({ data, types, columns, options: options.filters });
   const c = useCast();
 
@@ -218,39 +299,48 @@ export default function Table(props) {
       config={typedDetails}
       rowData={rowData}
     />);
-  } : [];
+  } : null;
 
-  const newColumns = Object.keys(columns).map(key => {
-    const type = types[key];
-    return {
-      field: key,
-      render: rowData => type.renderColumn(rowData[key]),
-      title: type.title,
-      // type: type.mtType,
-      headerStyle: { textAlign: "center" },
-    };
-  });
+  const colClass = c("pad");
+
+  const headEl = (detailPanel ? [<th key="expand"></th>] : []).concat(
+    Object.keys(columns).map(key => {
+      const type = types[key];
+      return (<th key={key} className={colClass}>{ type.title }</th>);
+    })
+  );
+
+  const lineClass = c("borderTopDivider");
+  const LineComponent = detailPanel ? ExpandLine : Line;
+
+  const linesEl = filteredData.map((rowData, index) => (
+    <LineComponent
+      key={index}
+      index={index}
+      data={rowData}
+      types={types}
+      icons={icons}
+      detailPanel={detailPanel}
+      className={lineClass}
+      columns={columns}
+    />
+  ));
 
   return (<>
-    <div className={c("horizontal flexWrap alignItemsCenter justifyContentEnd")}>
+    <Filters>
       { filtersEl }
-    </div>
-    
-    <MaterialTable
-      className="typed"
-      title=""
-      columns={newColumns}
-      data={filteredData}
-      options={{
-        ...options,
-        search: false,
-        filtering: false,
-      }}
-      icons={icons}
-      actions={actions}
-      detailPanel={detailPanel}
-      components={{ Toolbar: () => null }}
-    />
+    </Filters>
+
+    <Paper className={"typed " + c("overflowAuto")}>
+      <table className={c("sizeHorizontalFull")}>
+        <thead>
+          <tr>{ headEl }</tr>
+        </thead>
+        <tbody className={c("borderTopDivider")}>
+         { linesEl }
+        </tbody>
+      </table>
+    </Paper>
   </>);
 }
 
@@ -259,7 +349,6 @@ Table.propTypes = {
   data: PropTypes.array,
   options: PropTypes.object,
   icons: PropTypes.object,
-  actions: PropTypes.array,
   details: PropTypes.array,
   types: PropTypes.object.isRequired,
 };
