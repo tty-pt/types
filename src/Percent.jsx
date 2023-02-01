@@ -5,7 +5,7 @@ import MyPropTypes from "./prop-types";
 
 export function Percent(props) {
   const { icons, level } = props;
-  const Icon = icons[Math.round(level * icons.length / 100)];
+  const Icon = icons[Math.floor(level * icons.length / 100)];
   return <Tooltip title={level + "%"}><Icon /></Tooltip>;
 }
 

@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 // import { Button, Toggle, Paper, IconButton, InputBase, Chip, TextField } from "@material-ui/core";
-import { Paper, IconButton, InputBase, Chip, TextField } from "@material-ui/core";
+import { Paper, IconButton, InputBase, Chip, TextField, Checkbox } from "@material-ui/core";
 import SearchIcon from "@material-ui/icons/Search";
 import { useCast } from "@tty-pt/styles";
 import { enumCount } from "./utils";
@@ -113,7 +113,6 @@ export class IntegerType {
   constructor(title) {
     this.title = title;
     this.detailsTitle = title;
-    this.mtType = "numeric";
   }
 
   read(value) {
@@ -124,8 +123,8 @@ export class IntegerType {
     return this.read(value);
   }
 
-  renderColumn(value) {
-    return <TextCenter>{this.renderValue(value)}</TextCenter>;
+  renderColumn(value, index, key) {
+    return <TextCenter>{this.renderValue(value, index, key)}</TextCenter>;
   }
 
   format(value) {
@@ -151,13 +150,16 @@ export class IntegerType {
   preprocess(value) {
     return value;
   }
+
+  initial() {
+    return 1;
+  }
 }
 
 export class StringType extends IntegerType {
   constructor(title) {
     super(title);
     this.initialFilter = "";
-    this.mtType = "string";
   }
 
   invalid(value) {
@@ -173,17 +175,20 @@ export class StringType extends IntegerType {
     window.crypto.getRandomValues(arr);
     return Array.from(arr, dec2hex).join('');
   }
+
+  initial() {
+    return "";
+  }
 }
 
 export class ComponentType extends StringType {
   constructor(title) {
     super(title);
     delete this.initialFilter;
-    this.mtType = "numeric";
   }
 
-  renderColumn(value) {
-    return <FHCenter>{ this.renderValue(value) }</FHCenter>;
+  renderColumn(value, index, key) {
+    return <FHCenter>{ this.renderValue(value, index, key) }</FHCenter>;
   }
 
   format(value) {
@@ -213,6 +218,10 @@ export class PercentType extends ComponentType {
     const rvalue = this.read(value);
     return isNaN(rvalue) || rvalue < 0 || rvalue > 100;
   }
+
+  initial() {
+    return 0;
+  }
 }
 
 PercentType.extend = function extendPercent(icons, options = {}) {
@@ -220,11 +229,12 @@ PercentType.extend = function extendPercent(icons, options = {}) {
 };
 
 export class EnumType extends ComponentType {
-  constructor(title, declaration, map) {
+  constructor(title, declaration, map, error = 1) {
     super(title);
     this.initialFilter = { };
     this.declaration = declaration;
     this.map = map;
+    this.error = error;
   }
 
   renderValue(value) {
@@ -274,6 +284,10 @@ export class EnumType extends ComponentType {
   invalid(value) {
     return isNaN(value) || value;
   }
+
+  initial() {
+    return this.error;
+  }
 }
 
 EnumType.extend = function extendEnum(declaration, map, options = {}) {
@@ -291,10 +305,49 @@ export class BoolType extends EnumType {
   read(value) {
     return !value;
   }
+
+  initial() {
+    return true;
+  }
 }
 
 BoolType.extend = function extendBool(map, options = {}) {
   return extend(BoolType, [map], options);
+}
+
+function InnerCheckbox(props) {
+  const { name, index, rvalue } = props;
+  const [ checked, setChecked ] = useState(rvalue);
+
+  return (<Checkbox
+    name={name + "-" + index}
+    checked={checked}
+    onChange={() => setChecked(!checked)}
+  />);
+}
+
+InnerCheckbox.propTypes = {
+  name: PropTypes.string,
+  index: PropTypes.number,
+  rvalue: PropTypes.bool,
+};
+
+export class CheckboxType extends BoolType {
+  constructor(title, map) {
+    super(title, map);
+  }
+
+  read(value) {
+    return value;
+  }
+
+  renderValue(value, index, key) {
+    return (<InnerCheckbox
+      name={key}
+      index={index}
+      rvalue={this.read(value)}
+    />);
+  }
 }
 
 export class RecurseBoolType extends BoolType {
@@ -320,6 +373,13 @@ export class RecurseBoolType extends BoolType {
   invalid(value) {
     return this.read(value);
   }
+
+  initial() {
+    return Object.entries(this.types).reduce((a, [key, type]) => ({
+      ...a,
+      [key]: type.initial(),
+    }), {});
+  }
 }
 
 RecurseBoolType.extend = function extendRecurseBool(map, types, options = {}) {
@@ -339,18 +399,22 @@ export class DictionaryOfType extends BoolType {
 
     for (let i = 0; i < keys.length; i++)
       if (subType.invalid(value[keys[i]]))
-        return this.badState;
+        return true;
 
-    return this.goodState;
+    return false;
   }
 
   invalid(value) {
-    return this.read(value) === this.badState;
+    return this.read(value);
+  }
+
+  initial() {
+    return {};
   }
 }
 
-DictionaryOfType.extend = (map, SubType, options = {}) =>
-  extend(DictionaryOfType, [map, SubType], options);
+DictionaryOfType.extend = (map, SubType, subTypeArgs, options = {}) =>
+  extend(DictionaryOfType, [map, SubType, subTypeArgs], options);
 
 // export class ButtonType extends ComponentType {
 //   constructor(title, onClick) {
@@ -398,7 +462,6 @@ export class DateTimeType extends StringType {
   constructor(title) {
     super(title);
     this.initialFilter = {};
-    this.mtType = "datetime";
   }
 
   read(value) {
