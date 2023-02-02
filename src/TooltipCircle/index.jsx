@@ -1,14 +1,17 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { useCast } from "@tty-pt/styles";
 import { Tooltip } from "@material-ui/core";
 import MyPropTypes from "../prop-types";
 import Circle from "./Circle";
 
 export default function TooltipCircle(props) {
-  const { value, style } = props;
+  const { value, style, size = 12 } = props;
+  const c = useCast();
+
   return (<Tooltip title={value.title}>
-    <span style={style}>
-      <Circle color={value.color} size={12} />
+    <span className={c("vertical0 justifyContentCenter")} style={style}>
+      <Circle color={value.color} size={size} />
     </span>
   </Tooltip>);
 }
@@ -16,7 +19,8 @@ export default function TooltipCircle(props) {
 TooltipCircle.propTypes = {
   value: PropTypes.shape({
     title: PropTypes.string,
-    color: MyPropTypes.color,
+    color: MyPropTypes.color.isRequired,
   }),
   style: MyPropTypes.style,
+  size: MyPropTypes.integer,
 };
