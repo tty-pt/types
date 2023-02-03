@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import MyPropTypes from "./prop-types";
 import { Paper } from "@material-ui/core";
 import MaybeTip from "./MaybeTip";
 import { useCast } from "@tty-pt/styles";
@@ -16,7 +17,7 @@ const defaultTableCast = "tableLayoutFixed sizeHorizontalFull";
 
 function Details(props) {
   const {
-    rowData, types, details, config,
+    rowData, types, details, config, index,
   } = props;
 
   const c = useCast();
@@ -70,7 +71,7 @@ function Details(props) {
         return (<>
           <tr key={field}>
             <td className={headerClass}>
-              { renderValue ? <span>type.renderValue(value)</span> : null }
+              { renderValue ? <span>{ type.renderValue(value, index, field) }</span> : null }
               <span className={titleClass}>
                 { titleFormat(type.detailsTitle) }
               </span>
@@ -114,7 +115,7 @@ function Details(props) {
 
         return (<>
           <div key={field} className={headerClass}>
-            { renderValue ? <span>type.renderValue(value)</span> : null }
+            { renderValue ? <span>{ type.renderValue(value, index, field) }</span> : null }
             <span className={titleClass}>
               { titleFormat(type.detailsTitle) }
             </span>
@@ -172,12 +173,13 @@ Details.propTypes = {
   details: PropTypes.arrayOf(PropTypes.string),
   types: PropTypes.object.isRequired,
   config: PropTypes.object,
+  index: MyPropTypes.integer.isRequired,
 };
 
 function DetailsPanel(props) {
   const {
     details = [], types = {}, rowData = {},
-    config = {},
+    config = {}, index,
   } = props;
   const c = useCast();
   const { detailsCast = defaultDetailsCast } = config;
@@ -189,6 +191,7 @@ function DetailsPanel(props) {
       rowData={rowData}
       types={types}
       config={config}
+      index={index}
     />);
   }
 
@@ -198,10 +201,11 @@ function DetailsPanel(props) {
 }
 
 DetailsPanel.propTypes = {
-  details: PropTypes.array,
-  rowData: PropTypes.object,
+  details: PropTypes.array.isRequired,
+  rowData: PropTypes.object.isRequired,
   config: PropTypes.object,
-  types: PropTypes.object,
+  types: PropTypes.object.isRequired,
+  index: PropTypes.object.isRequired,
 };
 
 function Line(props) {
@@ -211,7 +215,9 @@ function Line(props) {
 
   const columnsEl = Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => {
     const type = types[key];
-    return (<td className={colClass} key={key}>{ type.renderColumn(value, index, key) }</td>);
+    return (<td className={colClass} key={key}>
+      { type.renderColumn(value, index, key) }
+    </td>);
   });
 
   return (<tr>{columnsEl}</tr>);
@@ -292,12 +298,13 @@ export default function Table(props) {
 
   const div = details.length;
 
-  const detailPanel = div ? function detailPanel(rowData) {
+  const detailPanel = div ? function detailPanel(rowData, index) {
     return (<DetailsPanel
       details={details}
       types={types}
       config={typedDetails}
       rowData={rowData}
+      index={index}
     />);
   } : null;
 
