@@ -20,7 +20,6 @@ import InnerTooltipCircle from "./TooltipCircle";
 import InnerTable from "./Table";
 import InnerList from "./List";
 import InnerIconButton from "./IconButton";
-export { defaultFiltersCast } from "./Table";
 // export { Enum } from "./Enum";
 // export { Percent } from "./Percent";
 

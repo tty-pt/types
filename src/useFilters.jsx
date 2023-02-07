@@ -1,6 +1,29 @@
 import React, { useState, useMemo } from "react";
 
+function getFilterColumns(getType, columns, prefix = "") {
+  return Object.entries(columns).reduce(
+    (a, [key, value]) => {
+      if (!value)
+        return a;
+
+      const type = getType(key);
+
+      if (type.types)
+        return getFilterColumns(key => type.types[key], value, prefix + key + ".");
+
+      if (type.SubType) {
+        const subType = new type.SubType("dummy", ...type.subTypeArgs);
+        return getFilterColumns(() => subType, value, prefix + key + ".");
+      }
+
+      return value.filter ? a.concat(prefix + key) : a;
+    },
+    [],
+  );
+}
+
 export default function useFilters({ data, types, columns }) {
+  console.log("useFilters", getFilterColumns(key => types[key], columns));
   const filterColumns = useMemo(() => Object.entries(columns).reduce(
     (a, [key, value]) => value && value.filter ? a.concat(key) : a,
     []

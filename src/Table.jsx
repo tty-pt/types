@@ -272,27 +272,29 @@ ExpandLine.propTypes = {
   columns: PropTypes.object.isRequired,
 };
 
-export const defaultFiltersCast = "horizontal flexWrap alignItemsCenter justifyContentEnd";
+const horizontalCenterCast = "horizontal flexWrap alignItemsCenter"
 
-function DefaultFilters(props) {
-  const { children } = props;
+function DefaultToolbar(props) {
+  const { title, children } = props;
   const c = useCast();
 
-  return (
-    <div className={c(defaultFiltersCast)}>
+  return (<div className={c(horizontalCenterCast + "justifyContentSpaceBetween")}>
+    <span className={c("h5")}>{ title }</span>
+    <div className={c(horizontalCenterCast + "justifyContentEnd")}>
       { children }
     </div>
-  );
+  </div>);
 }
 
-DefaultFilters.propTypes = {
+DefaultToolbar.propTypes = {
   children: PropTypes.node,
+  title: PropTypes.string,
 };
 
 export default function Table(props) {
-  const { data, types, columns, details = [], options = {}, icons } = props;
+  const { title = "", data, types, columns, details = [], options = {}, icons } = props;
   const { components = {}, typedDetails = {} } = options;
-  const { Filters = DefaultFilters } = components;
+  const { Toolbar = DefaultToolbar } = components;
   const { filtersEl, filteredData } = useFilters({ data, types, columns, options: options.filters });
   const c = useCast();
 
@@ -334,9 +336,9 @@ export default function Table(props) {
   ));
 
   return (<>
-    <Filters>
+    <Toolbar title={title}>
       { filtersEl }
-    </Filters>
+    </Toolbar>
 
     <Paper className={"typed " + c("overflowAuto")}>
       <table className={c("sizeHorizontalFull")}>
@@ -351,6 +353,8 @@ export default function Table(props) {
   </>);
 }
 
+Table.Toolbar = DefaultToolbar;
+
 Table.propTypes = {
   columns: PropTypes.object,
   data: PropTypes.array,
@@ -358,4 +362,5 @@ Table.propTypes = {
   icons: PropTypes.object,
   details: PropTypes.array,
   types: PropTypes.object.isRequired,
+  title: PropTypes.string,
 };
