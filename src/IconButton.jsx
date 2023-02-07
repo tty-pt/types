@@ -4,7 +4,11 @@ import { IconButton as BaseIconButton, Tooltip } from "@material-ui/core";
 
 export default
 function IconButton(props) {
-  const { Component, className, title, onClick, disabled, iconClassName } = props;
+  const {
+    Component, className = "", title = "",
+    onClick, disabled, iconClassName = "",
+  } = props;
+
   return (<Tooltip title={title}>
     <span className={className}>
       <BaseIconButton
