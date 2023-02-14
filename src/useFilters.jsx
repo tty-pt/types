@@ -24,7 +24,7 @@ function getFilterColumns(getType, columns, prefix = "") {
 
 export default function useFilters({ data, types, columns }) {
   const rFilterColumns = getFilterColumns(key => types[key], columns);
-  assert(rFilterColumns);
+  console.assert(rFilterColumns);
   // console.log("useFilters", rFilterColumns);
   const filterColumns = useMemo(() => Object.entries(columns).reduce(
     (a, [key, value]) => value && value.filter ? a.concat(key) : a,
