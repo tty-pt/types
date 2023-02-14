@@ -1,6 +1,6 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.0.2-177",
+  "version": "0.0.2-178",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "build/main.js",
   "scripts": {
@@ -28,7 +28,7 @@
   "homepage": "https://github.com/tty-pt/types#readme",
   "devDependencies": {
     "@hot-loader/react-dom": "^16.0.0",
-    "@tty-pt/scripts": "^0.0.1-24"
+    "@tty-pt/scripts": "0.0.1-49"
   },
   "peerDependencies": {
     "@material-ui/core": "^4.12.4",
