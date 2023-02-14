@@ -278,9 +278,9 @@ function DefaultToolbar(props) {
   const { title, children } = props;
   const c = useCast();
 
-  return (<div className={c(horizontalCenterCast + "justifyContentSpaceBetween")}>
+  return (<div className={c(horizontalCenterCast + " justifyContentSpaceBetween")}>
     <span className={c("h5")}>{ title }</span>
-    <div className={c(horizontalCenterCast + "justifyContentEnd")}>
+    <div className={c(horizontalCenterCast + " justifyContentEnd")}>
       { children }
     </div>
   </div>);
@@ -292,7 +292,7 @@ DefaultToolbar.propTypes = {
 };
 
 export default function Table(props) {
-  const { title = "", data, types, columns, details = [], options = {}, icons } = props;
+  const { title = "", name = "table", data, types, columns, details = [], options = {}, icons } = props;
   const { components = {}, typedDetails = {} } = options;
   const { Toolbar = DefaultToolbar } = components;
   const { filtersEl, filteredData } = useFilters({ data, types, columns, options: options.filters });
@@ -350,6 +350,7 @@ export default function Table(props) {
         </tbody>
       </table>
     </Paper>
+    <input type="hidden" data-hidden-type="json" name={name + "_n"} value={data.length} />
   </>);
 }
 
@@ -363,4 +364,5 @@ Table.propTypes = {
   details: PropTypes.array,
   types: PropTypes.object.isRequired,
   title: PropTypes.string,
+  name: PropTypes.string,
 };
