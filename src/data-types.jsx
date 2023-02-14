@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 // import { Button, Toggle, Paper, IconButton, InputBase, Chip, TextField } from "@material-ui/core";
 import { Paper, IconButton, InputBase, Chip, TextField, Checkbox } from "@material-ui/core";
@@ -319,8 +319,12 @@ function InnerCheckbox(props) {
   const { name, index, rvalue } = props;
   const [ checked, setChecked ] = useState(rvalue);
 
+  useEffect(() => {
+    setChecked(rvalue);
+  }, [rvalue]);
+
   return (<Checkbox
-    name={name + "-" + index}
+    name={name + "_" + index}
     checked={checked}
     onChange={() => setChecked(!checked)}
   />);
@@ -339,6 +343,10 @@ export class CheckboxType extends BoolType {
 
   read(value) {
     return value;
+  }
+
+  initial() {
+    return false;
   }
 
   renderValue(value, index, key) {
