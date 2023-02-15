@@ -220,7 +220,7 @@ function Line(props) {
     </td>);
   });
 
-  return (<tr>{columnsEl}</tr>);
+  return (<tr data-testid={"row-" + index}>{columnsEl}</tr>);
 }
 
 Line.propTypes = {
@@ -240,6 +240,7 @@ function ExpandLine(props) {
   const columnsEl = [(
     <td key="expand" className={colClass}>
       <IconButton
+        data-testid="expand"
         iconClassName={open ? c("rotatePiOverTwo") : ""}
         Component={icons.DetailPanel}
         onClick={() => setOpen(!open)}
@@ -254,8 +255,8 @@ function ExpandLine(props) {
 
   if (open)
     return (<>
-      <tr>{columnsEl}</tr>
-      <tr><td className={className} colSpan={columnsEl.length}>{detailPanel(data)}</td></tr>
+      <tr data-testid={"row-" + index}>{columnsEl}</tr>
+      <tr data-testid={"details-" + index}><td className={className} colSpan={columnsEl.length}>{detailPanel(data)}</td></tr>
     </>)
 
   else
