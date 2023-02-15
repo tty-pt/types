@@ -67,11 +67,11 @@ FHCenter.propTypes = {
 };
 
 function TextFilter(props) {
-  const { type, value, onChange } = props;
+  const { dataKey, type, value, onChange } = props;
   const c = useCast();
 
   return (
-    <Paper className={c("horizontal0")}>
+    <Paper data-testid={"filter-" + dataKey} className={c("horizontal0")}>
       <IconButton aria-label={type.title}>
         <SearchIcon />
       </IconButton>
@@ -89,14 +89,16 @@ function TextFilter(props) {
 TextFilter.propTypes = {
   type: PropTypes.any,
   value: PropTypes.string,
+  dataKey: PropTypes.string,
   onChange: PropTypes.func,
 };
 
 function Filter(props) {
-  const { label, active, value, ...rest } = props;
+  const { chipKey, label, active, value, ...rest } = props;
   const c = useCast();
 
   return (<Chip
+    data-testid={"chip-" + chipKey}
     label={`${label} (${value})`}
     className={c(active ? "chipActive" : "chip")}
     { ...rest }
@@ -105,6 +107,7 @@ function Filter(props) {
 
 Filter.propTypes = {
   label: PropTypes.string,
+  chipKey: PropTypes.string,
   value: PropTypes.any,
   active: PropTypes.bool,
 };
@@ -124,7 +127,7 @@ export class IntegerType {
   }
 
   renderColumn(value, index, key) {
-    return <TextCenter>{this.renderValue(value, index, key)}</TextCenter>;
+    return <TextCenter data-testid={"column-" + key}>{this.renderValue(value, index, key)}</TextCenter>;
   }
 
   format(value) {
@@ -188,7 +191,7 @@ export class ComponentType extends StringType {
   }
 
   renderColumn(value, index, key) {
-    return <FHCenter>{ this.renderValue(value, index, key) }</FHCenter>;
+    return <FHCenter data-testid={"column-" + key}>{ this.renderValue(value, index, key) }</FHCenter>;
   }
 
   format(value) {
@@ -264,6 +267,7 @@ export class EnumType extends ComponentType {
     const filtersEl = Object.values(type.declaration).map(key => (
       <Filter
         key={key}
+        chipKey={dataKey + "-" + key}
         label={type.map[key].title}
         value={numbers[key]}
         active={value[key]}
@@ -275,7 +279,7 @@ export class EnumType extends ComponentType {
     ));
 
     return (
-      <div className={c("horizontal0 flexWrap")}>
+      <div data-testid={"filter-" + dataKey} className={c("horizontal0 flexWrap")}>
         { filtersEl }
       </div>
     );
@@ -489,10 +493,10 @@ export class DateTimeType extends StringType {
   }
 
   Filter(props) {
-    const { type, value, onChange } = props;
+    const { dataKey, type, value, onChange } = props;
     const c = useCast();
 
-    return (<Paper className={c("padSmall verticalSmall")}>
+    return (<Paper data-testid={"filter-" + dataKey} className={c("padSmall verticalSmall")}>
       <TextField
         label={"Start " + type.title}
         type="datetime-local"
