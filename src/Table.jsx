@@ -17,7 +17,7 @@ const defaultTableCast = "tableLayoutFixed sizeHorizontalFull";
 
 function Details(props) {
   const {
-    rowData, types, details, config, index,
+    rowData, type, details, config, index,
   } = props;
 
   const c = useCast();
@@ -156,7 +156,7 @@ function Details(props) {
     </Component>);
   }
 
-  const detailsEl = details.map(key => mapDetails(key, rowData[key], types[key]));
+  const detailsEl = details.map(key => mapDetails(key, rowData[key], type.types[key]));
 
   if (table)
     return (<table className={c(tableCast)}>
@@ -171,14 +171,14 @@ function Details(props) {
 Details.propTypes = {
   rowData: PropTypes.object,
   details: PropTypes.arrayOf(PropTypes.string),
-  types: PropTypes.object.isRequired,
+  type: PropTypes.any.isRequired,
   config: PropTypes.object,
   index: MyPropTypes.integer.isRequired,
 };
 
 function DetailsPanel(props) {
   const {
-    details = [], types = {}, rowData = {},
+    details = [], type, rowData = {},
     config = {}, index,
   } = props;
   const c = useCast();
@@ -189,7 +189,7 @@ function DetailsPanel(props) {
       key={key}
       details={details}
       rowData={rowData}
-      types={types}
+      type={type}
       config={config}
       index={index}
     />);
@@ -204,21 +204,20 @@ DetailsPanel.propTypes = {
   details: PropTypes.array.isRequired,
   rowData: PropTypes.object.isRequired,
   config: PropTypes.object,
-  types: PropTypes.object.isRequired,
+  type: PropTypes.any.isRequired,
   index: PropTypes.object.isRequired,
 };
 
 function Line(props) {
-  const { data, index, types, className, columns } = props;
+  const { data, index, type, className, columns } = props;
   const c = useCast();
   const colClass = c("pad") + " " + className;
 
-  const columnsEl = Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => {
-    const type = types[key];
-    return (<td className={colClass} key={key}>
-      { type.renderColumn(value, index, key) }
-    </td>);
-  });
+  const columnsEl = Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => (
+    <td className={colClass} key={key}>
+      { type.types[key].renderColumn(value, index, key) }
+    </td>
+  ));
 
   return (<tr data-testid={"row-" + index}>{columnsEl}</tr>);
 }
@@ -226,13 +225,13 @@ function Line(props) {
 Line.propTypes = {
   data: PropTypes.object.isRequired,
   index: PropTypes.number.isRequired,
-  types: PropTypes.object.isRequired,
+  type: PropTypes.any.isRequired,
   columns: PropTypes.object.isRequired,
   className: PropTypes.string,
 };
 
 function ExpandLine(props) {
-  const { data, index, types, className, icons, detailPanel, columns } = props;
+  const { data, index, type, className, icons, detailPanel, columns } = props;
   const [ open, setOpen ] = useState(false);
   const c = useCast();
   const colClass = c("pad") + " " + className;
@@ -246,12 +245,11 @@ function ExpandLine(props) {
         onClick={() => setOpen(!open)}
       />
     </td>
-  )].concat(Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => {
-    const type = types[key];
-    return (<td key={key} className={colClass}>
-      { type.renderColumn(value, index, key) }
-    </td>);
-  }));
+  )].concat(Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => (
+    <td key={key} className={colClass}>
+      { type.types[key].renderColumn(value, index, key) }
+    </td>
+  )));
 
   if (open)
     return (<>
@@ -266,7 +264,7 @@ function ExpandLine(props) {
 ExpandLine.propTypes = {
   data: PropTypes.object.isRequired,
   index: PropTypes.number.isRequired,
-  types: PropTypes.object.isRequired,
+  type: PropTypes.any.isRequired,
   className: PropTypes.string,
   icons: PropTypes.object.isRequired,
   detailPanel: PropTypes.func.isRequired,
@@ -293,10 +291,10 @@ DefaultToolbar.propTypes = {
 };
 
 export default function Table(props) {
-  const { title = "", name = "table", data, types, columns, details = [], options = {}, icons } = props;
+  const { title = "", name = "table", data, type, columns, details = [], options = {}, icons } = props;
   const { components = {}, typedDetails = {} } = options;
   const { Toolbar = DefaultToolbar } = components;
-  const { filtersEl, filteredData } = useFilters({ data, types, columns, options: options.filters });
+  const { filtersEl, filteredData } = useFilters({ data, type, columns, options: options.filters });
   const c = useCast();
 
   const div = details.length;
@@ -304,7 +302,7 @@ export default function Table(props) {
   const detailPanel = div ? function detailPanel(rowData, index) {
     return (<DetailsPanel
       details={details}
-      types={types}
+      type={type}
       config={typedDetails}
       rowData={rowData}
       index={index}
@@ -314,10 +312,9 @@ export default function Table(props) {
   const colClass = c("pad");
 
   const headEl = (detailPanel ? [<th key="expand"></th>] : []).concat(
-    Object.keys(columns).map(key => {
-      const type = types[key];
-      return (<th key={key} className={colClass}>{ type.title }</th>);
-    })
+    Object.keys(columns).map(key => (
+      <th key={key} className={colClass}>{ type.types[key].title }</th>
+    ))
   );
 
   const lineClass = c("borderTopDivider");
@@ -328,7 +325,7 @@ export default function Table(props) {
       key={index}
       index={index}
       data={rowData}
-      types={types}
+      type={type}
       icons={icons}
       detailPanel={detailPanel}
       className={lineClass}
@@ -363,7 +360,7 @@ Table.propTypes = {
   options: PropTypes.object,
   icons: PropTypes.object,
   details: PropTypes.array,
-  types: PropTypes.object.isRequired,
+  type: PropTypes.any.isRequired,
   title: PropTypes.string,
   name: PropTypes.string,
 };

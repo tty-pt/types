@@ -4,10 +4,10 @@ import { useCast } from "@tty-pt/styles";
 import useFilters from "./useFilters";
 
 const List = React.forwardRef((props, ref) => {
-  const { data, types, columns = {}, Component, style, ...rest } = props;
+  const { data, type, columns = {}, Component, style, ...rest } = props;
   const c = useCast();
 
-  const { filtersEl, filteredData } = useFilters({ data, types, columns });
+  const { filtersEl, filteredData } = useFilters({ data, type, columns });
 
   const componentsEl = filteredData.map((item, index) => {
     return (<Component
@@ -32,7 +32,7 @@ List.displayName = "List";
 List.propTypes = {
   data: PropTypes.array,
   style: PropTypes.object.isRequired,
-  types: PropTypes.object,
+  type: PropTypes.any.isRequired,
   columns: PropTypes.object,
   onClick: PropTypes.object.isRequired,
   Component: PropTypes.elementType,
