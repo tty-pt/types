@@ -10,8 +10,9 @@ function IconButton(props) {
   } = props;
 
   return (<Tooltip title={title}>
-    <span className={className}>
+    <span>
       <BaseIconButton
+        className={className}
         disabled={disabled}
         onClick={onClick}
       >
