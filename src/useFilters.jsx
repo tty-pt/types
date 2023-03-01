@@ -22,8 +22,8 @@ function getFilterColumns(getType, columns, prefix = "") {
   );
 }
 
-export default function useFilters({ data, types, columns }) {
-  const rFilterColumns = getFilterColumns(key => types[key], columns);
+export default function useFilters({ data, type, columns }) {
+  const rFilterColumns = getFilterColumns(key => type.types[key], columns);
   console.assert(rFilterColumns);
   // console.log("useFilters", rFilterColumns);
   const filterColumns = useMemo(() => Object.entries(columns).reduce(
@@ -33,11 +33,11 @@ export default function useFilters({ data, types, columns }) {
 
   const [ filters, setFilters ] =  useState(filterColumns.reduce((a, key) => ({
     ...a,
-    [key]: types[key].initialFilter,
+    [key]: type.types[key].initialFilter,
   }), {}));
 
   const filtersEl = useMemo(() => filterColumns.map(key => {
-    const type = types[key];
+    const type = type.types[key];
 
     return (<type.Filter
       key={"filter-" + key}
@@ -50,7 +50,7 @@ export default function useFilters({ data, types, columns }) {
   }), [filterColumns, data, filters]);
 
   const filteredData = useMemo(() => data.filter(item => Object.entries(filters).reduce(
-    (a, [key, filterValue]) => a && (!columns[key] || !columns[key].filter || types[key].filter(item[key], filterValue)),
+    (a, [key, filterValue]) => a && (!columns[key] || !columns[key].filter || type.types[key].filter(item[key], filterValue)),
     true
   )), [data, filters, columns]);
 
