@@ -15,8 +15,8 @@ function extend(DefaultType, passArgs, options) {
   const Type = options.makeType
     ? options.makeType(BaseType)
     : (class SpecificType extends BaseType {
-      constructor(meta, title, ...args) {
-        super(meta, title, ...passArgs, ...args);
+      constructor(title, meta, ...args) {
+        super(title, meta, ...passArgs, ...args);
       }
     });
 
@@ -26,7 +26,7 @@ function extend(DefaultType, passArgs, options) {
 }
 
 function dec2hex(dec) {
-  return dec.toString(16).padStart(2, "0")
+  return dec.toString(16).padStart(2, "0");
 }
 
 function toDateTimeLocal(date) {
@@ -113,9 +113,9 @@ Filter.propTypes = {
 };
 
 export class Integer {
-  constructor(meta, title) {
-    this.meta = meta;
+  constructor(title, meta = {}) {
     this.title = title;
+    this.meta = meta;
     this.detailsTitle = title;
   }
 
@@ -161,8 +161,8 @@ export class Integer {
 }
 
 export class String extends Integer {
-  constructor(meta, title) {
-    super(meta, title);
+  constructor(title, meta) {
+    super(title, meta);
     this.initialFilter = "";
   }
 
@@ -177,7 +177,7 @@ export class String extends Integer {
   mock() {
     const arr = new Uint8Array(20);
     window.crypto.getRandomValues(arr);
-    return Array.from(arr, dec2hex).join('');
+    return Array.from(arr, dec2hex).join("");
   }
 
   initial() {
@@ -186,8 +186,8 @@ export class String extends Integer {
 }
 
 export class Component extends String {
-  constructor(meta, title) {
-    super(meta, title);
+  constructor(title, meta) {
+    super(title, meta);
     delete this.initialFilter;
   }
 
@@ -205,13 +205,13 @@ export class Component extends String {
 }
 
 export class Percent extends Component {
-  constructor(meta, title, icons) {
-    super(meta, title);
+  constructor(title, meta, icons) {
+    super(title, meta);
     this.icons = icons;
   }
 
   renderValue(value) {
-    return <PercentComponent icons={this.icons} level={this.read(value)} />
+    return <PercentComponent icons={this.icons} level={this.read(value)} />;
   }
 
   format(value) {
@@ -233,8 +233,8 @@ Percent.extend = function extendPercent(icons, options = {}) {
 };
 
 export class Enum extends Component {
-  constructor(meta, title, declaration, map, error = 1) {
-    super(meta, title);
+  constructor(title, meta, declaration, map, error = 1) {
+    super(title, meta);
     this.initialFilter = { };
     this.declaration = declaration;
     this.map = map;
@@ -249,8 +249,9 @@ export class Enum extends Component {
     return this.map[this.read(value)];
   }
 
-  format(value) {
-    return this.mapped(value).title;
+  format(value, meta) {
+    const upMeta = { ...meta, ...this.meta };
+    return upMeta.t(this.mapped(value).title);
   }
 
   filter(value, filterValue) {
@@ -300,8 +301,8 @@ Enum.extend = function extendEnum(declaration, map, options = {}) {
 };
 
 export class Bool extends Enum {
-  constructor(meta, title, map) {
-    super(meta, title, {
+  constructor(title, meta, map) {
+    super(title, meta, {
       OK: false,
       ERROR: true,
     }, map);
@@ -318,7 +319,7 @@ export class Bool extends Enum {
 
 Bool.extend = function extendBool(map, options = {}) {
   return extend(Bool, [map], options);
-}
+};
 
 function InnerCheckbox(props) {
   const { name, index, rvalue } = props;
@@ -342,8 +343,8 @@ InnerCheckbox.propTypes = {
 };
 
 export class Checkbox extends Bool {
-  constructor(meta, title, map) {
-    super(meta, title, map);
+  constructor(title, meta, map) {
+    super(title, meta, map);
   }
 
   read(value) {
@@ -364,8 +365,8 @@ export class Checkbox extends Bool {
 }
 
 export class RecurseBool extends Bool {
-  constructor(meta, title, map, types) {
-    super(meta, title, map);
+  constructor(title, meta, map, types) {
+    super(title, meta, map);
     this.types = types;
   }
 
@@ -387,22 +388,26 @@ export class RecurseBool extends Bool {
     return this.read(value);
   }
 
-  initial() {
+  initial(meta) {
+    const upMeta = { ...meta, ...this.meta };
+
     return Object.entries(this.types).reduce((a, [key, type]) => ({
       ...a,
-      [key]: type.initial(),
+      [key]: type.initial(upMeta),
     }), {});
   }
 
-  preprocess(value) {
+  preprocess(value, meta) {
+    const upMeta = { ...meta, ...this.meta };
+
     return Object.entries(value).reduce((a, [key, iValue]) => {
-      const rkey = this.meta.transformKey.out(key);
+      const rkey = upMeta.transformKey.out(key);
       const type = this.types[rkey];
 
       if (type)
         return {
           ...a,
-          [rkey]: type.preprocess(iValue),
+          [rkey]: type.preprocess(iValue, upMeta),
         };
 
       else
@@ -413,17 +418,17 @@ export class RecurseBool extends Bool {
 
 RecurseBool.extend = function extendRecurseBool(map, types, options = {}) {
   return extend(RecurseBool, [map, types], options);
-}
+};
 
 export class DictionaryOf extends Bool {
-  constructor(meta, title, map, SubType, subTypeArgs) {
-    super(meta, title, map);
+  constructor(title, meta, map, SubType, subTypeArgs) {
+    super(title, meta, map);
     this.SubType = SubType;
     this.subTypeArgs = subTypeArgs;
   }
 
   read(value) {
-    const dummy = new this.SubType(this.meta, "dummy", ...this.subTypeArgs);
+    const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
     const keys = Object.keys(value);
 
     for (let i = 0; i < keys.length; i++)
@@ -441,15 +446,16 @@ export class DictionaryOf extends Bool {
     return {};
   }
 
-  preprocess(value) {
-    const dummy = new this.SubType(this.meta, "dummy", ...this.subTypeArgs);
+  preprocess(value, meta) {
+    const upMeta = { ...meta, ...this.meta };
+    const dummy = new this.SubType("dummy", upMeta, ...this.subTypeArgs);
 
     return Object.entries(value).reduce((a, [key, iValue]) => {
-      const rkey = this.meta.transformKey.out(key);
+      const rkey = upMeta.transformKey.out(key);
 
       return {
         ...a,
-        [rkey]: dummy.preprocess(iValue),
+        [rkey]: dummy.preprocess(iValue, upMeta),
       };
     }, {});
   }
@@ -501,8 +507,8 @@ DictionaryOf.extend = (map, SubType, subTypeArgs, options = {}) =>
 // }
 
 export class DateTime extends String {
-  constructor(meta, title) {
-    super(meta, title);
+  constructor(title, meta) {
+    super(title, meta);
     this.initialFilter = {};
   }
 
