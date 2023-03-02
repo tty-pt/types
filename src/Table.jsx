@@ -4,7 +4,6 @@ import MyPropTypes from "./prop-types";
 import { Paper } from "@material-ui/core";
 import MaybeTip from "./MaybeTip";
 import { useCast } from "@tty-pt/styles";
-import { useTranslation } from "react-i18next";
 import useFilters from "./useFilters";
 import IconButton from "./IconButton";
 
@@ -16,12 +15,9 @@ const defaultDetailsCast = "pad horizontal flexWrap flexGrowChildren";
 const defaultTableCast = "tableLayoutFixed sizeHorizontalFull";
 
 function Details(props) {
-  const {
-    rowData, type, details, config, index,
-  } = props;
+  const { rowData, type, details, config, index, meta } = props;
 
   const c = useCast();
-  const { t } = useTranslation();
 
   const {
     titleFormat = title => title + ": ",
@@ -61,7 +57,7 @@ function Details(props) {
       const recurseEl = type.types ? (
         renderRecurse(key => type.types[key])
       ) : type.SubType ? (
-        renderRecurse(key => new type.SubType(t(key), ...type.subTypeArgs))
+        renderRecurse(key => new type.SubType(meta.t(key), {}, ...type.subTypeArgs))
       ) : null;
 
       function Component(props) {
@@ -73,7 +69,7 @@ function Details(props) {
             <td className={headerClass}>
               { renderValue ? <span>{ type.renderValue(value, index, field) }</span> : null }
               <span className={titleClass}>
-                { titleFormat(type.detailsTitle) }
+                { titleFormat(meta.t(type.detailsTitle)) }
               </span>
             </td>
             <td className={cellClass}>
@@ -106,7 +102,7 @@ function Details(props) {
       const recurseEl = type.types ? (
         renderRecurse(key => type.types[key])
       ) : type.SubType ? (
-        renderRecurse(key => new type.SubType(t(key), ...type.subTypeArgs))
+        renderRecurse(key => new type.SubType(meta.t(key), {}, ...type.subTypeArgs))
       ) : null;
 
       function Component(props) {
@@ -117,7 +113,7 @@ function Details(props) {
           <div key={field} className={headerClass}>
             { renderValue ? <span>{ type.renderValue(value, index, field) }</span> : null }
             <span className={titleClass}>
-              { titleFormat(type.detailsTitle) }
+              { titleFormat(meta.t(type.detailsTitle)) }
             </span>
             <span className={cellClass}>
               <Tooltip tooltip={tooltip}>{ children }</Tooltip>
@@ -152,7 +148,7 @@ function Details(props) {
       tooltip={type.detailsTooltip && type.detailsTooltip(value)}
       key={field}
     >
-      { type.format(value) }
+      { type.format(value, meta) }
     </Component>);
   }
 
@@ -171,6 +167,9 @@ function Details(props) {
 Details.propTypes = {
   rowData: PropTypes.object,
   details: PropTypes.arrayOf(PropTypes.string),
+  meta: PropTypes.shape({
+    t: PropTypes.func.isRequired,
+  }),
   type: PropTypes.any.isRequired,
   config: PropTypes.object,
   index: MyPropTypes.integer.isRequired,
@@ -179,7 +178,7 @@ Details.propTypes = {
 function DetailsPanel(props) {
   const {
     details = [], type, rowData = {},
-    config = {}, index,
+    config = {}, index, meta,
   } = props;
   const c = useCast();
   const { detailsCast = defaultDetailsCast } = config;
@@ -192,6 +191,7 @@ function DetailsPanel(props) {
       type={type}
       config={config}
       index={index}
+      meta={meta}
     />);
   }
 
@@ -204,6 +204,9 @@ DetailsPanel.propTypes = {
   details: PropTypes.array.isRequired,
   rowData: PropTypes.object.isRequired,
   config: PropTypes.object,
+  meta: PropTypes.shape({
+    t: PropTypes.func.isRequired,
+  }),
   type: PropTypes.any.isRequired,
   index: PropTypes.object.isRequired,
 };
@@ -254,8 +257,8 @@ function ExpandLine(props) {
   if (open)
     return (<>
       <tr data-testid={"row-" + index}>{columnsEl}</tr>
-      <tr data-testid={"details-" + index}><td className={className} colSpan={columnsEl.length}>{detailPanel(data)}</td></tr>
-    </>)
+      <tr data-testid={"details-" + index}><td className={className} colSpan={columnsEl.length}>{detailPanel(data, index)}</td></tr>
+    </>);
 
   else
     return <tr>{columnsEl}</tr>;
@@ -271,7 +274,7 @@ ExpandLine.propTypes = {
   columns: PropTypes.object.isRequired,
 };
 
-const horizontalCenterCast = "horizontal flexWrap alignItemsCenter"
+const horizontalCenterCast = "horizontal flexWrap alignItemsCenter";
 
 function DefaultToolbar(props) {
   const { title, children } = props;
@@ -291,10 +294,11 @@ DefaultToolbar.propTypes = {
 };
 
 export default function Table(props) {
-  const { title = "", name = "table", data, type, columns, details = [], options = {}, icons } = props;
+  const { title = "", name = "table", data, type, columns, details = [], options = {}, icons, t } = props;
   const { components = {}, typedDetails = {} } = options;
   const { Toolbar = DefaultToolbar } = components;
   const { filtersEl, filteredData } = useFilters({ data, type, columns, options: options.filters });
+  const upMeta = { t: t ?? type.meta?.t ?? (a => a), ...type.meta };
   const c = useCast();
 
   const div = details.length;
@@ -306,6 +310,7 @@ export default function Table(props) {
       config={typedDetails}
       rowData={rowData}
       index={index}
+      meta={upMeta}
     />);
   } : null;
 
@@ -313,7 +318,7 @@ export default function Table(props) {
 
   const headEl = (detailPanel ? [<th key="expand"></th>] : []).concat(
     Object.keys(columns).map(key => (
-      <th key={key} className={colClass}>{ type.types[key].title }</th>
+      <th key={key} className={colClass}>{ upMeta.t(type.types[key].title) }</th>
     ))
   );
 
@@ -344,7 +349,7 @@ export default function Table(props) {
           <tr>{ headEl }</tr>
         </thead>
         <tbody className={c("borderTopDivider")}>
-         { linesEl }
+          { linesEl }
         </tbody>
       </table>
     </Paper>
@@ -360,6 +365,7 @@ Table.propTypes = {
   options: PropTypes.object,
   icons: PropTypes.object,
   details: PropTypes.array,
+  t: PropTypes.func,
   type: PropTypes.any.isRequired,
   title: PropTypes.string,
   name: PropTypes.string,

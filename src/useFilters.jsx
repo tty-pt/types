@@ -12,7 +12,7 @@ function getFilterColumns(getType, columns, prefix = "") {
         return getFilterColumns(key => type.types[key], value, prefix + key + ".");
 
       if (type.SubType) {
-        const subType = new type.SubType("dummy", ...type.subTypeArgs);
+        const subType = new type.SubType("dummy", {}, ...type.subTypeArgs);
         return getFilterColumns(() => subType, value, prefix + key + ".");
       }
 
@@ -37,13 +37,13 @@ export default function useFilters({ data, type, columns }) {
   }), {}));
 
   const filtersEl = useMemo(() => filterColumns.map(key => {
-    const type = type.types[key];
+    const subType = type.types[key];
 
-    return (<type.Filter
+    return (<subType.Filter
       key={"filter-" + key}
       dataKey={key}
       data={data}
-      type={type}
+      type={subType}
       value={filters[key]}
       onChange={newValue => setFilters({ ...filters, [key]: newValue })}
     />);

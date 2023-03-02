@@ -65,9 +65,23 @@ function validateInteger(value) {
   return null;
 }
 
-function integer(props, propName) {
-  return validateInteger(props[propName]);
+function integerPropType(props, propName) {
+  const value = props[propName];
+
+  if (typeof value === "undefined")
+    return null;
+
+  return validateInteger(value);
 }
+
+integerPropType.isRequired = function(props, propName) {
+  const value = props[propName];
+
+  if (typeof value === "undefined")
+    return new Error("Required integer value prop not set");
+
+  return validateInteger(value);
+};
 
 function rangedInteger(min, max) {
   return function (props, propName) {
@@ -88,7 +102,7 @@ const MyPropTypes = {
   rangedNumber,
   percent: rangedNumber(0, 100),
   enum: enumValue,
-  integer,
+  integer: integerPropType,
   rangedInteger,
   color: PropTypes.string,
   style: PropTypes.objectOf(PropTypes.string),
