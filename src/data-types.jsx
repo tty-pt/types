@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 // import { Button, Toggle, Paper, IconButton, InputBase, Chip, TextField } from "@material-ui/core";
-import { Paper, IconButton, InputBase, Chip, TextField, Checkbox as CheckboxComponent } from "@material-ui/core";
+import { Button, Paper, IconButton, InputBase, Chip, TextField, Checkbox as CheckboxComponent } from "@material-ui/core";
 import SearchIcon from "@material-ui/icons/Search";
 import { useCast } from "@tty-pt/styles";
 import { enumCount } from "./utils";
@@ -558,5 +558,26 @@ export class DateTime extends String {
         }}
       />
     </Paper>);
+  }
+}
+
+export class Fun extends Bool {
+  constructor(title, meta, map) {
+    super(title, meta, map);
+    this.fun = null;
+  }
+
+  set(data) {
+    this.data = data;
+  }
+
+  renderValue(value) {
+    return (<Button onClick={value}>
+      { this.title }
+    </Button>);
+  }
+
+  initial() {
+    return () => {};
   }
 }

@@ -14,6 +14,7 @@ export {
   // BaseToggle,
   // Toggle,
   DateTime,
+  Fun,
 } from "./data-types";
 import PropTypes from "./prop-types";
 import InnerTooltipCircle from "./TooltipCircle";
