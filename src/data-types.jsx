@@ -158,6 +158,11 @@ export class Integer {
   initial() {
     return 1;
   }
+
+  onChange(value) {
+    if (this.meta.onChange)
+      this.meta.onChange(value);
+  }
 }
 
 export class String extends Integer {
@@ -414,6 +419,11 @@ export class RecurseBool extends Bool {
         return a;
     }, {});
   }
+
+  onChange(value) {
+    super.onChange(value);
+    Object.entries(this.types).forEach(([key, subType]) => subType.onChange(value[key]));
+  }
 }
 
 RecurseBool.extend = function extendRecurseBool(map, types, options = {}) {
@@ -458,6 +468,13 @@ export class DictionaryOf extends Bool {
         [rkey]: dummy.preprocess(iValue, upMeta),
       };
     }, {});
+  }
+
+  onChange(value) {
+    const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
+
+    super.onChange(value);
+    Object.keys(value).forEach(key => dummy.onChange(value[key]));
   }
 }
 
