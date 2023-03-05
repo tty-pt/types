@@ -23,6 +23,7 @@ import InnerList from "./List";
 import InnerIconButton from "./IconButton";
 // export { Enum } from "./Enum";
 // export { Percent } from "./Percent";
+export { MetaHandler } from "./MetaHandler";
 
 export const Table = InnerTable;
 export const List = InnerList;
