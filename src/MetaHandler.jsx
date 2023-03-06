@@ -37,7 +37,14 @@ export class MetaHandler {
     if (!this.dependencies.global)
       return;
 
-    this.type.onChange(value);
+    else if (this.index)
+      Object.keys(value).forEach(index => {
+        if (this.type.diff(value[index], this.cache[index]))
+          this.type.onChange(value[index], this.cache[index]);
+      });
+
+    else if (this.type.diff(value, this.cache))
+      this.type.onChange(value);
   }
 
   transformOnce(data) {
@@ -52,12 +59,6 @@ export class MetaHandler {
 
   transformField(value, name /*, index */) {
     return value[name];
-    // return varTransform(value, {
-    //   ...this.type.meta,
-    //   ...this.type.types[name].meta,
-    //   name,
-    //   index,
-    // });
   }
 
   transformData(map, data, key) {

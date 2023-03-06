@@ -159,7 +159,11 @@ export class Integer {
     return 1;
   }
 
-  onChange(value) {
+  diff(value, previous) {
+    return value !== previous;
+  }
+
+  onChange(value /*, previous */) {
     if (this.meta.onChange)
       this.meta.onChange(value);
   }
@@ -411,9 +415,20 @@ export class RecurseBool extends Bool {
     }), {});
   }
 
-  onChange(value) {
-    super.onChange(value);
-    Object.entries(this.types).forEach(([key, subType]) => subType.onChange(value[key]));
+  diff(value, previous) {
+    for (let key in this.types)
+      if (this.types[key].diff(value[key], previous[key]))
+        return true;
+
+    return false;
+  }
+
+  onChange(value, previous) {
+    super.onChange(value, previous);
+    Object.entries(this.types).forEach(([key, subType]) => {
+      if (subType.diff(value[key], previous[key]))
+        subType.onChange(value[key], previous[key]);
+    });
   }
 }
 
@@ -461,11 +476,28 @@ export class DictionaryOf extends Bool {
     }, {});
   }
 
-  onChange(value) {
+  diff(value, previous) {
     const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
 
-    super.onChange(value);
-    Object.keys(value).forEach(key => dummy.onChange(value[key]));
+    for (let key in value) {
+      if (!previous[key] || dummy.diff(value[key], previous[key]))
+        return true;
+    }
+
+    for (let key in previous)
+      if (!value[key])
+        return true;
+
+    return false;
+  }
+
+  onChange(value, previous) {
+    const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
+    super.onChange(value, previous);
+    Object.keys(value).forEach(key => {
+      if (dummy.diff(value[key], previous[key]))
+        dummy.onChange(value[key], previous[key]);
+    });
   }
 }
 
