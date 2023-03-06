@@ -405,19 +405,10 @@ export class RecurseBool extends Bool {
   preprocess(value, meta) {
     const upMeta = { ...meta, ...this.meta };
 
-    return Object.entries(value).reduce((a, [key, iValue]) => {
-      const rkey = upMeta.transformKey.out(key);
-      const type = this.types[rkey];
-
-      if (type)
-        return {
-          ...a,
-          [rkey]: type.preprocess(iValue, upMeta),
-        };
-
-      else
-        return a;
-    }, {});
+    return Object.entries(this.types).reduce((a, [key, type]) => ({
+      ...a,
+      [key]: value[key] ? type.preprocess(value[key], upMeta) : type.initial(upMeta),
+    }), {});
   }
 
   onChange(value) {
