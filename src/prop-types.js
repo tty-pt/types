@@ -11,15 +11,14 @@ function validateRange(min, value, max) {
 }
 
 function validateEnum(enumV, value) {
-  if (typeof value !== "number" || !Number.isInteger(value))
-    return new Error("Enum value is not an integer number");
+  if (typeof value !== "string" && (typeof value !== "number" || !Number.isInteger(value)))
+    return new Error("Enum value is not valid");
 
-  const keysLength = Object.keys(enumV).length;
+  for (let key in enumV)
+    if (enumV[key] === value)
+      return null;
 
-  if (value < 0 || value > keysLength)
-    return new Error("Enum value (" + value + ") outside of range (0-" + keysLength + ")");
-
-  return null;
+  return new Error("Enum value is not in declaration");
 }
 
 function rangedNumber(min, max) {
