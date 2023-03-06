@@ -136,7 +136,7 @@ export class Integer {
   }
 
   invalid(value) {
-    return value;
+    return value === undefined || this.read(value);
   }
 
   filter(value, filterValue) {
@@ -151,12 +151,24 @@ export class Integer {
     return Math.floor(Math.random());
   }
 
-  preprocess(value) {
-    return value;
+  metaPreprocess(data, meta) {
+    if (!(this.meta.getter && this.meta.if && this.meta.if(this, data, meta)))
+      return;
+
+    return this.meta.getter(this, data, meta);
   }
 
-  initial() {
-    return 1;
+  preprocess(data, meta) {
+    return this.metaPreprocess(data, meta) ?? data;
+  }
+
+  metaInitial(meta, data) {
+    if (this.meta.default && !(this.meta.if && this.meta.if(this, data)))
+      return this.meta.default;
+  }
+
+  initial(meta, data) {
+    return this.metaInitial(meta, data);
   }
 
   diff(value, previous) {
@@ -176,7 +188,7 @@ export class String extends Integer {
   }
 
   invalid(value) {
-    return !value;
+    return value === undefined || !this.read(value);
   }
 
   filter(value, filterValue) {
@@ -187,10 +199,6 @@ export class String extends Integer {
     const arr = new Uint8Array(20);
     window.crypto.getRandomValues(arr);
     return Array.from(arr, dec2hex).join("");
-  }
-
-  initial() {
-    return "";
   }
 }
 
@@ -205,10 +213,6 @@ export class Component extends String {
   }
 
   format(value) {
-    return this.read(value);
-  }
-
-  invalid(value) {
     return this.read(value);
   }
 }
@@ -228,12 +232,10 @@ export class Percent extends Component {
   }
 
   invalid(value) {
+    if (value === undefined)
+      return true;
     const rvalue = this.read(value);
     return isNaN(rvalue) || rvalue < 0 || rvalue > 100;
-  }
-
-  initial() {
-    return 0;
   }
 }
 
@@ -241,13 +243,20 @@ Percent.extend = function extendPercent(icons, options = {}) {
   return extend(Percent, [icons], options);
 };
 
+export function metaMix(a, b) {
+  const c = { ...a };
+  delete c.getter;
+  delete c.subGetter;
+  return { ...c, ...b };
+  // return { ...a, ...b };
+}
+
 export class Enum extends Component {
-  constructor(title, meta, declaration, map, error = 1) {
+  constructor(title, meta, declaration, map) {
     super(title, meta);
-    this.initialFilter = { };
+    this.initialFilter = {};
     this.declaration = declaration;
     this.map = map;
-    this.error = error;
   }
 
   renderValue(value) {
@@ -259,7 +268,7 @@ export class Enum extends Component {
   }
 
   format(value, meta) {
-    const upMeta = { ...meta, ...this.meta };
+    const upMeta = metaMix(meta, this.meta);
     return upMeta.t(this.mapped(value).title);
   }
 
@@ -297,11 +306,10 @@ export class Enum extends Component {
   }
 
   invalid(value) {
-    return isNaN(value) || value;
-  }
-
-  initial() {
-    return this.error;
+    if (value === undefined)
+      return true;
+    const rvalue = this.read(value);
+    return isNaN(rvalue) || rvalue;
   }
 }
 
@@ -319,10 +327,6 @@ export class Bool extends Enum {
 
   read(value) {
     return !value;
-  }
-
-  initial() {
-    return true;
   }
 }
 
@@ -360,10 +364,6 @@ export class Checkbox extends Bool {
     return value;
   }
 
-  initial() {
-    return false;
-  }
-
   renderValue(value, index, key) {
     return (<InnerCheckbox
       name={key}
@@ -394,28 +394,95 @@ export class RecurseBool extends Bool {
   }
 
   invalid(value) {
-    return this.read(value);
+    return value === undefined || this.read(value);
   }
 
-  initial(meta) {
-    const upMeta = { ...meta, ...this.meta };
+  initial(meta, data) {
+    const mi = this.metaInitial(meta, data);
+
+    if (mi)
+      return mi;
+
+    const upMeta = metaMix(meta, this.meta);
 
     return Object.entries(this.types).reduce((a, [key, type]) => ({
       ...a,
-      [key]: type.initial(upMeta),
+      [key]: type.initial(upMeta, data),
     }), {});
   }
 
-  preprocess(value, meta) {
-    const upMeta = { ...meta, ...this.meta };
+  preprocess(data, meta, parentKey) {
+    // console.log("RecurseBool.preprocess ENTRY", this.title, parentKey, meta, data, this.meta.getter);
 
-    return Object.entries(this.types).reduce((a, [key, type]) => ({
-      ...a,
-      [key]: value[key] ? type.preprocess(value[key], upMeta) : type.initial(upMeta),
-    }), {});
+    if (this.meta.if && !this.meta.if(this, data, meta)) {
+      // console.log("RecurseBool.preprocess rejected", this.title, parentKey, meta, data);
+      return;
+    }
+
+    const upMeta = metaMix(meta, this.meta);
+
+    const afterAt = (parentKey ?? "@").split("@")[1];
+
+    function defaultGetter(_, data, _meta, key) {
+      // console.log("default getter", data, key);
+      const [beforeAt, afterAt] = key.split("@");
+      if (!afterAt) {
+        // console.log("default getter early exit", data, key);
+        return data;
+      }
+      const [beforeDot, ...afterDot] = afterAt.split(".");
+      const shouldLowKey = afterDot.length ? afterDot[afterDot.length - 1] : undefined;
+      const lowKey = shouldLowKey ?? beforeDot ?? afterAt ?? beforeAt;
+      // console.log("default getter final", data, key, data[lowKey]);
+      return data[lowKey];
+    }
+
+    const [ beforeDot, ...lastDots] = afterAt.split(".");
+    const shouldLastKey = lastDots.length ? lastDots[lastDots.length - 1] : undefined;
+    const lastKey = shouldLastKey ?? (lastDots.length ? lastDots[lastDots.length - 2] : beforeDot);
+
+    const gotten = lastDots.length && !lastDots[lastDots.length - 1] || !beforeDot
+      ? data : (this.meta.getter ?? defaultGetter)(
+        this,
+        lastKey === beforeDot ? data : data[lastKey],
+        upMeta,
+        (parentKey ?? "@")
+      );
+
+    if (!gotten) {
+      // const ret = this.initial(meta, data);
+      // console.log("RecurseBool.preprocess not gotten", this.title, parentKey, data, upMeta, ret);
+      // return ret;
+      return this.meta.default;
+    }
+
+    // const pKey = beforeAt && afterAt ? "" : (parentKey ?? "@");
+
+    const ret = Object.entries(this.types).reduce((a, [key, type]) => {
+      // console.log("RecurseBool.preprocess item", this.title, data, key, type);
+      const downMeta = metaMix(upMeta, type.meta);
+      const downKey = (parentKey ?? "@") + (type.meta.from ?? key);
+      const subGetter = this.meta.getter ?? type.meta.getter ?? defaultGetter;
+      const subGotten = subGetter(type, gotten, downMeta, downKey);
+      const value = type.preprocess(subGotten, downMeta, downKey + ".");
+
+      if (value)
+        return ({
+          ...a,
+          [key]: value,
+        });
+
+      else
+        return a;
+    }, {});
+    // console.log("RecurseBool.preprocess final", this.title, data, upMeta, parentKey, ret);
+    return ret;
   }
 
   diff(value, previous) {
+    if (value && !previous || !value)
+      return true;
+
     for (let key in this.types)
       if (this.types[key].diff(value[key], previous[key]))
         return true;
@@ -425,9 +492,11 @@ export class RecurseBool extends Bool {
 
   onChange(value, previous) {
     super.onChange(value, previous);
+    const rvalue = value ?? {};
+    const rprevious = previous ?? {};
     Object.entries(this.types).forEach(([key, subType]) => {
-      if (subType.diff(value[key], previous[key]))
-        subType.onChange(value[key], previous[key]);
+      if (subType.diff(rvalue[key], rprevious[key]))
+        subType.onChange(rvalue[key], rprevious[key]);
     });
   }
 }
@@ -444,6 +513,9 @@ export class DictionaryOf extends Bool {
   }
 
   read(value) {
+    if (!value)
+      return undefined;
+
     const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
     const keys = Object.keys(value);
 
@@ -455,19 +527,24 @@ export class DictionaryOf extends Bool {
   }
 
   invalid(value) {
-    return this.read(value);
+    return value === undefined || this.read(value);
   }
 
-  initial() {
-    return {};
-  }
+  preprocess(data, meta) {
+    const mp = this.metaPreprocess(data, meta);
 
-  preprocess(value, meta) {
-    const upMeta = { ...meta, ...this.meta };
+    if (mp)
+      return mp;
+
+    if (!data)
+      return;
+
+    const upMeta = metaMix(meta, this.meta);
+    const transformKeyOut = upMeta.transformKey?.out ?? (a => a);
     const dummy = new this.SubType("dummy", upMeta, ...this.subTypeArgs);
 
-    return Object.entries(value).reduce((a, [key, iValue]) => {
-      const rkey = upMeta.transformKey.out(key);
+    return Object.entries(data).reduce((a, [key, iValue]) => {
+      const rkey = transformKeyOut(key);
 
       return {
         ...a,
@@ -557,7 +634,10 @@ export class DateTime extends String {
   }
 
   invalid(value) {
-    return Object.prototype.toString.call(value) !== "[object Date]" || isNaN(value);
+    if (value === undefined)
+      return true;
+    const rvalue = this.read(value);
+    return Object.prototype.toString.call(rvalue) !== "[object Date]" || isNaN(rvalue);
   }
 
   filter(value, filterValue) {
@@ -615,9 +695,5 @@ export class Fun extends Bool {
     return (<Button onClick={value}>
       { this.title }
     </Button>);
-  }
-
-  initial() {
-    return () => {};
   }
 }

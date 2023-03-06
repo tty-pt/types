@@ -44,7 +44,16 @@ function rangedNumber(min, max) {
 }
 
 function enumValue(declaration) {
-  return function (props, propName) {
+  function enumPropType(props, propName) {
+    const value = props[propName];
+
+    if (typeof value === "undefined")
+      return null;
+
+    return validateEnum(declaration, value);
+  }
+
+  enumPropType.isRequired = function (props, propName) {
     const value = props[propName];
 
     if (typeof value === "undefined")
@@ -52,6 +61,8 @@ function enumValue(declaration) {
 
     return validateEnum(declaration, value);
   };
+
+  return enumPropType;
 }
 
 function validateInteger(value) {
