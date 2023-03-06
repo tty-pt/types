@@ -1,11 +1,18 @@
-export function enumCount(declaration, arr, key) {
-  const initial = Object.values(declaration).reduce((a, value) => ({
-    ...a,
-    [value]: 0,
-  }), {});
+function _get(obj, key, defaultValue) {
+  if (!key)
+    return obj ?? defaultValue;
+  const [headKey, ...tailKeys] = key.split(".");
+  return _get(obj[headKey], tailKeys.join("."));
+}
 
-  return arr.reduce((a, item) => ({
-    ...a,
-    [item[key]]: a[item[key]] + 1,
-  }), initial);
+export function enumCount(declaration, arr, key) { // robotState, robot.robotState
+  let ans = {};
+
+  for (const key of Object.values(declaration))
+    ans[key] = 0;
+
+  for (const item of arr)
+    ans[_get(item, key)]++;
+
+  return ans;
 }

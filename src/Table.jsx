@@ -14,8 +14,13 @@ const defaultTitleCast = "fontWeightBold";
 const defaultDetailsCast = "pad horizontal flexWrap flexGrowChildren";
 const defaultTableCast = "tableLayoutFixed sizeHorizontalFull";
 
+export function titleCamelCase(camelCase) {
+  const almost = camelCase.replace(/([A-Z])/g, function (g) { return " " + g; });
+  return almost.charAt(0).toUpperCase() + almost.substr(1);
+}
+
 function Details(props) {
-  const { rowData, type, details, config, index, meta } = props;
+  const { rowData, type, details, config, index, meta: detailsMeta } = props;
 
   const c = useCast();
 
@@ -38,7 +43,9 @@ function Details(props) {
   const invalidClass = c(invalidCast);
 
   const maybeTableMap = {
-    [true]: (field, value, type) => {
+    [true]: (field, value, pType, subType, meta) => {
+      const upMeta = { ...meta, ...pType.meta, ...subType.meta };
+
       function renderRecurse(getSubInstance) {
         return (<tr key={field + "-children"}>
           <td colSpan="2">
@@ -46,7 +53,8 @@ function Details(props) {
               <tbody>
                 {
                   Object.keys(value)
-                    .map(key => mapDetails(key, value[key], getSubInstance(key)))
+                    .map(key => mapDetails(key, value[key], subType, getSubInstance(key), upMeta))
+                    .map(key => mapDetails(key, value[key], subType, getSubInstance(key), upMeta))
                 }
               </tbody>
             </table>
@@ -54,11 +62,11 @@ function Details(props) {
         </tr>);
       }
 
-      const recurseEl = type.types ? (
-        renderRecurse(key => type.types[key])
-      ) : type.SubType ? (
-        renderRecurse(key => new type.SubType(meta.t(key), {}, ...type.subTypeArgs))
-      ) : null;
+      const recurseEl = value ? (subType.types ? (
+        renderRecurse(key => subType.types[key])
+      ) : subType.SubType ? (
+        renderRecurse(key => new subType.SubType(meta.t(key), {}, ...subType.subTypeArgs))
+      ) : null) : null;
 
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */
@@ -67,9 +75,14 @@ function Details(props) {
         return (<>
           <tr key={field}>
             <td className={headerClass}>
-              { renderValue ? <span>{ type.renderValue(value, index, field) }</span> : null }
+              { renderValue ? <span>{ subType.renderValue(value, index, field) }</span> : null }
               <span className={titleClass}>
-                { titleFormat(meta.t(type.detailsTitle)) }
+                {
+                  titleFormat(meta.t(pType.SubType
+                    ? titleCamelCase(field)
+                    : subType.detailsTitle
+                  ))
+                }
               </span>
             </td>
             <td className={cellClass}>
@@ -89,21 +102,23 @@ function Details(props) {
 
       return Component;
     },
-    [false]: (field, value, type) => {
+    [false]: (field, value, pType, subType, meta) => {
+      const upMeta = { ...meta, ...pType.meta, ...subType.meta };
+
       function renderRecurse(getSubInstance) {
         return (<div className={c(containerCast)} key={field + "-children"}>
           {
             Object.keys(value)
-              .map(key => mapDetails(key, value[key], getSubInstance(key)))
+              .map(key => mapDetails(key, value[key], subType, getSubInstance(key), upMeta))
           }
         </div>);
       }
 
-      const recurseEl = type.types ? (
-        renderRecurse(key => type.types[key])
-      ) : type.SubType ? (
-        renderRecurse(key => new type.SubType(meta.t(key), {}, ...type.subTypeArgs))
-      ) : null;
+      const recurseEl = value ? (subType.types ? (
+        renderRecurse(key => subType.types[key])
+      ) : subType.SubType ? (
+        renderRecurse(key => new subType.SubType(meta.t(key), {}, ...subType.subTypeArgs))
+      ) : null) : null;
 
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */
@@ -111,9 +126,14 @@ function Details(props) {
 
         return (<>
           <div key={field} className={headerClass}>
-            { renderValue ? <span>{ type.renderValue(value, index, field) }</span> : null }
+            { renderValue ? <span>{ subType.renderValue(value, index, field) }</span> : null }
             <span className={titleClass}>
-              { titleFormat(meta.t(type.detailsTitle)) }
+              {
+                titleFormat(meta.t(pType.SubType
+                  ? titleCamelCase(field)
+                  : subType.detailsTitle
+                ))
+              }
             </span>
             <span className={cellClass}>
               <Tooltip tooltip={tooltip}>{ children }</Tooltip>
@@ -136,23 +156,22 @@ function Details(props) {
 
   const boolTable = !!table;
 
-  function mapDetails(field, value, type) {
-    const isInvalid = type.invalid(value);
+  function mapDetails(field, value, type, subType, meta) {
+    const isInvalid = subType.invalid(value);
     const cellClass = isInvalid ? invalidClass : "";
-
-    const Component = maybeTableMap[boolTable](field, value, type);
+    const Component = maybeTableMap[boolTable](field, value, type, subType, meta);
 
     return (<Component
       cellClass={cellClass}
       value={value}
-      tooltip={type.detailsTooltip && type.detailsTooltip(value)}
+      tooltip={subType.detailsTooltip && subType.detailsTooltip(value)}
       key={field}
     >
-      { type.format(value, meta) }
+      { subType.format(value, meta) }
     </Component>);
   }
 
-  const detailsEl = details.map(key => mapDetails(key, rowData[key], type.types[key]));
+  const detailsEl = details.map(key => mapDetails(key, rowData[key], type, type.types[key], detailsMeta));
 
   if (table)
     return (<table className={c(tableCast)}>
@@ -298,7 +317,7 @@ export default function Table(props) {
   const { components = {}, typedDetails = {} } = options;
   const { Toolbar = DefaultToolbar } = components;
   const { filtersEl, filteredData } = useFilters({ data, type, columns, options: options.filters });
-  const upMeta = { t: t ?? type.meta?.t ?? (a => a), ...type.meta };
+  const upMeta = { t: t ?? type.meta?.t ?? (a => a) };
   const c = useCast();
 
   const div = details.length;
