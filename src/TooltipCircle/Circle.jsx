@@ -1,10 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useCast } from "@tty-pt/styles";
+import { useCast, MagicContext } from "@tty-pt/styles";
 
 export default function Circle(props) {
-  const { color = "Success", size } = props;
-  const c = useCast();
+  const { color = "Success", size, dependencies } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   const sizeProps = size ? {
     height: size + "px",
@@ -24,4 +24,5 @@ Circle.propTypes = {
   className: PropTypes.string,
   color: PropTypes.string,
   size: PropTypes.number,
+  dependencies: PropTypes.object,
 };

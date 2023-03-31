@@ -1,13 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useCast } from "@tty-pt/styles";
+import { useCast, MagicContext } from "@tty-pt/styles";
 import { Tooltip } from "@material-ui/core";
 import MyPropTypes from "../prop-types";
 import Circle from "./Circle";
 
 export default function TooltipCircle(props) {
-  const { value, style, size = 12 } = props;
-  const c = useCast();
+  const { value, style, size = 12, dependencies } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   return (<Tooltip title={value.title}>
     <span className={c("vertical0 justifyContentCenter")} style={style}>
@@ -23,4 +23,5 @@ TooltipCircle.propTypes = {
   }),
   style: MyPropTypes.style,
   size: MyPropTypes.integer,
+  dependencies: PropTypes.object,
 };
