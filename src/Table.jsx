@@ -14,6 +14,8 @@ const defaultTitleCast = "fontWeightBold";
 const defaultDetailsCast = "pad horizontal flexWrap flexGrowChildren";
 const defaultTableCast = "tableLayoutFixed sizeHorizontalFull";
 const defaultDetailCast = "overflowHidden";
+const lineCast = "borderTopDivider";
+const defaultThCast = "textOverflowEllipsis overflowHidden";
 
 export function titleCamelCase(camelCase) {
   const almost = camelCase.replace(/([A-Z])/g, function (g) { return " " + g; });
@@ -166,7 +168,7 @@ function Details(props) {
     return (<Component
       cellClass={cellClass}
       value={value}
-      tooltip={subType.detailsTooltip && subType.detailsTooltip(value)}
+      tooltip={subType.detailsTooltip(value, meta)}
       key={field}
     >
       { subType.format(value, meta) }
@@ -240,9 +242,9 @@ function Line(props) {
   const c = useCast(dependencies?.MagicContext ?? MagicContext);
   const colClass = c("pad") + " " + className;
 
-  const columnsEl = Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => (
+  const columnsEl = Object.keys(columns).map(key => (
     <td className={colClass} key={key}>
-      { type.types[key].renderColumn(value, index, key, type.meta) }
+      { type.types[key].renderColumn(data[key], index, key, type.meta) }
     </td>
   ));
 
@@ -273,9 +275,9 @@ function ExpandLine(props) {
         onClick={() => setOpen(!open)}
       />
     </td>
-  )].concat(Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => (
+  )].concat(Object.keys(columns).map(key => (
     <td key={key} className={colClass}>
-      { type.types[key].renderColumn(value, index, key, type.meta) }
+      { type.types[key].renderColumn(data[key], index, key, type.meta) }
     </td>
   )));
 
@@ -322,7 +324,7 @@ DefaultToolbar.propTypes = {
 
 export default function Table(props) {
   const { title = "", name = "table", data, type, columns, details = [], options = {}, icons, t, dependencies } = props;
-  const { components = {}, typedDetails = {} } = options;
+  const { components = {}, typedDetails = {}, thCast = defaultThCast, tableCast = defaultTableCast } = options;
   const { Toolbar = DefaultToolbar } = components;
   const { filtersEl, filteredData } = useFilters({ data, type, columns, options: options.filters, dependencies });
   const upMeta = { t: t ?? type.meta?.t ?? (a => a) };
@@ -342,15 +344,15 @@ export default function Table(props) {
     />);
   } : null;
 
-  const colClass = c("pad");
+  const thClass = c(thCast + " pad");
 
   const headEl = (detailPanel ? [<th key="expand"></th>] : []).concat(
     Object.keys(columns).map(key => (
-      <th key={key} className={colClass}>{ upMeta.t(type.types[key].title) }</th>
+      <th key={key} className={thClass}>{ upMeta.t(type.types[key].title) }</th>
     ))
   );
 
-  const lineClass = c("borderTopDivider");
+  const lineClass = c(lineCast);
   const LineComponent = detailPanel ? ExpandLine : Line;
 
   const linesEl = filteredData.map((rowData, index) => (
@@ -372,7 +374,7 @@ export default function Table(props) {
     </Toolbar>
 
     <Paper className={"typed " + c("overflowAuto")}>
-      <table className={c("sizeHorizontalFull")}>
+      <table className={c(tableCast)}>
         <thead>
           <tr>{ headEl }</tr>
         </thead>
