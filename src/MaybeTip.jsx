@@ -1,11 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Tooltip from "@material-ui/core/Tooltip";
-import { useCast } from "@tty-pt/styles";
+import { useCast, MagicContext } from "@tty-pt/styles";
 
 export default function MaybeTip(props) {
-  const { tooltip, children } = props;
-  const c = useCast();
+  const { tooltip, children, dependencies } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   const tooltipEl = tooltip ? tooltip.split("\n").map((line, idx) => (
     <div key={idx}>{line}</div>
@@ -24,4 +24,5 @@ export default function MaybeTip(props) {
 MaybeTip.propTypes = {
   tooltip: PropTypes.string,
   children: PropTypes.node,
+  dependencies: PropTypes.object,
 };

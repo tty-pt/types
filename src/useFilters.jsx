@@ -53,7 +53,7 @@ function isIncluded(type, columns, filters, item) {
   return true;
 }
 
-function _getFiltersEl(res, type, data, filters, setFilters, prefix = "") {
+function _getFiltersEl(res, type, data, filters, setFilters, dependencies, prefix = "") {
   // console.log("_getFiltersEl0", res, type, data, filters, setFilters, prefix);
   for (const [key, subType] of Object.entries(type.types)) {
     const filter = filters[key];
@@ -68,7 +68,7 @@ function _getFiltersEl(res, type, data, filters, setFilters, prefix = "") {
       _getFiltersEl(res, subType, data, filter, (newValue, subKey) => setFilters({
         ...filter,
         [subKey]: newValue,
-      }, key), fullKey);
+      }, key), dependencies, fullKey);
 
     else res.push(<subType.Filter
       key={"filter" + fullKey.replace(".", "-")}
@@ -81,21 +81,21 @@ function _getFiltersEl(res, type, data, filters, setFilters, prefix = "") {
   }
 }
 
-function getFiltersEl(type, data, filters, setFilters) {
+function getFiltersEl(type, data, filters, setFilters, dependencies) {
   if (!data)
     return [];
   let res = [];
   _getFiltersEl(res, type, data, filters, (value, key) => setFilters({
     ...filters,
     [key]: value,
-  }));
+  }), dependencies);
   return res;
 }
 
-export default function useFilters({ data, type, columns }) {
+export default function useFilters({ data, type, columns, dependencies }) {
   const filterColumns = useMemo(() => getFilterColumns(key => type.types[key], columns), [columns]);
   const [ filters, setFilters ] =  useState(keyedFilter(type, filterColumns));
-  const filtersEl = useMemo(() => getFiltersEl(type, data, filters, setFilters), [data, filters]);
+  const filtersEl = useMemo(() => getFiltersEl(type, data, filters, setFilters, dependencies), [data, filters]);
   const filteredData = useMemo(() => data ? data.filter(item => isIncluded(type, columns, filters, item)) : [], [data, filters, columns]);
 
   if (!data)

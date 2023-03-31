@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Tooltip } from "@material-ui/core";
 
 export function Enum(props) {
-  const { values, enumKey } = props;
+  const { values, enumKey, tooltip } = props;
   const value = values[enumKey];
 
   if (!value)
@@ -11,10 +11,11 @@ export function Enum(props) {
 
   const { Icon, title } = value;
 
-  return <Tooltip title={title}><Icon /></Tooltip>;
+  return <Tooltip title={tooltip ?? title}><Icon /></Tooltip>;
 }
 
 Enum.propTypes = {
   enumKey: PropTypes.any,
   values: PropTypes.objectOf(PropTypes.any),
+  tooltip: PropTypes.string,
 };

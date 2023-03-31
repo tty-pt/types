@@ -1,13 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useCast } from "@tty-pt/styles";
+import { useCast, MagicContext } from "@tty-pt/styles";
 import useFilters from "./useFilters";
 
 const List = React.forwardRef((props, ref) => {
-  const { data, type, columns = {}, Component, style, ...rest } = props;
-  const c = useCast();
+  const { data, type, columns = {}, Component, style, dependencies, ...rest } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
-  const { filtersEl, filteredData } = useFilters({ data, type, columns });
+  const { filtersEl, filteredData } = useFilters({ data, type, columns, dependencies });
 
   const componentsEl = filteredData.map((item, index) => {
     return (<Component
@@ -36,6 +36,7 @@ List.propTypes = {
   columns: PropTypes.object,
   onClick: PropTypes.object.isRequired,
   Component: PropTypes.elementType,
+  dependencies: PropTypes.object,
 };
 
 export default List;

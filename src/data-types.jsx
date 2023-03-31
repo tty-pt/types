@@ -1,12 +1,29 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-// import { Button, Toggle, Paper, IconButton, InputBase, Chip, TextField } from "@material-ui/core";
-import { Button, Paper, IconButton, InputBase, Chip, TextField, Checkbox as CheckboxComponent } from "@material-ui/core";
+import { Tooltip, Button, Paper, IconButton, InputBase, Chip, TextField, Checkbox as CheckboxComponent } from "@material-ui/core";
 import SearchIcon from "@material-ui/icons/Search";
-import { useCast } from "@tty-pt/styles";
+import CancelIcon from "@material-ui/icons/Cancel";
+import { useCast, MagicContext } from "@tty-pt/styles";
 import { enumCount } from "./utils";
 import { Percent as PercentComponent } from "./Percent";
 import { Enum as EnumComponent } from "./Enum";
+
+const defaultMeta = {
+  na: {
+    title: "N/A",
+    color: "Black",
+    Icon: CancelIcon,
+  },
+  naTooltip: "Not Available",
+};
+
+function metaMix(a, b) {
+  const c = { ...a };
+  delete c.getter;
+  delete c.subGetter;
+  return { ...defaultMeta, ...c, ...b };
+  // return { ...a, ...b };
+}
 
 export
 function extend(DefaultType, passArgs, options) {
@@ -43,19 +60,20 @@ function delKey(object, key) {
 }
 
 function TextCenter(props) {
-  const { children } = props;
-  const c = useCast();
+  const { children, dependencies } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   return <div className={c("textAlignCenter")}>{children}</div>;
 }
 
 TextCenter.propTypes = {
   children: PropTypes.node,
+  dependencies: PropTypes.object,
 };
 
 function FHCenter(props) {
-  const { children } = props;
-  const c = useCast();
+  const { children, dependencies } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   return (<div className={c("horizontal0 justifyContentCenter")}>
     { children }
@@ -64,11 +82,12 @@ function FHCenter(props) {
 
 FHCenter.propTypes = {
   children: PropTypes.node,
+  dependencies: PropTypes.object,
 };
 
 function TextFilter(props) {
-  const { dataKey, type, value, onChange } = props;
-  const c = useCast();
+  const { dataKey, type, value, onChange, dependencies } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   return (
     <Paper data-testid={"filter-" + dataKey} className={c("horizontal0")}>
@@ -91,11 +110,12 @@ TextFilter.propTypes = {
   value: PropTypes.string,
   dataKey: PropTypes.string,
   onChange: PropTypes.func,
+  dependencies: PropTypes.object,
 };
 
 function Filter(props) {
-  const { chipKey, label, active, value, ...rest } = props;
-  const c = useCast();
+  const { chipKey, label, active, value, dependencies, ...rest } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   return (<Chip
     data-testid={"chip-" + chipKey}
@@ -110,6 +130,7 @@ Filter.propTypes = {
   chipKey: PropTypes.string,
   value: PropTypes.any,
   active: PropTypes.bool,
+  dependencies: PropTypes.object,
 };
 
 export class Integer {
@@ -123,12 +144,22 @@ export class Integer {
     return value;
   }
 
-  renderValue(value) {
-    return this.read(value);
+  renderValue(value, _index, _key, meta) {
+    const upMeta = metaMix(meta, this.meta);
+    const rvalue = this.read(value);
+    if (rvalue !== undefined)
+      return rvalue;
+    else
+      return <Tooltip title={upMeta.naTooltip}>{upMeta.na.title}</Tooltip>;
   }
 
-  renderColumn(value, index, key) {
-    return <TextCenter data-testid={"column-" + key}>{this.renderValue(value, index, key)}</TextCenter>;
+  renderColumn(value, index, key, meta) {
+    return <TextCenter
+      dependencies={meta.dependencies}
+      data-testid={"column-" + key}
+    >
+      {this.renderValue(value, index, key, meta)}
+    </TextCenter>;
   }
 
   format(value) {
@@ -208,8 +239,13 @@ export class Component extends String {
     delete this.initialFilter;
   }
 
-  renderColumn(value, index, key) {
-    return <FHCenter data-testid={"column-" + key}>{ this.renderValue(value, index, key) }</FHCenter>;
+  renderColumn(value, index, key, meta) {
+    return <FHCenter
+      dependencies={meta.dependencies}
+      data-testid={"column-" + key}
+    >
+      { this.renderValue(value, index, key, meta) }
+    </FHCenter>;
   }
 
   format(value) {
@@ -223,8 +259,17 @@ export class Percent extends Component {
     this.icons = icons;
   }
 
-  renderValue(value) {
-    return <PercentComponent icons={this.icons} level={this.read(value)} />;
+  renderValue(value, _index, _key, meta) {
+    const upMeta = metaMix(meta, this.meta);
+    const rvalue = this.read(value);
+    if (!rvalue)
+      return <EnumComponent
+        values={{ [undefined]: upMeta.na }}
+        enumKey={undefined}
+        tooltip={upMeta.naTooltip}
+      />;
+
+    return <PercentComponent icons={this.icons} level={rvalue} />;
   }
 
   format(value) {
@@ -243,14 +288,6 @@ Percent.extend = function extendPercent(icons, options = {}) {
   return extend(Percent, [icons], options);
 };
 
-export function metaMix(a, b) {
-  const c = { ...a };
-  delete c.getter;
-  delete c.subGetter;
-  return { ...c, ...b };
-  // return { ...a, ...b };
-}
-
 export class Enum extends Component {
   constructor(title, meta, declaration, map) {
     super(title, meta);
@@ -259,17 +296,27 @@ export class Enum extends Component {
     this.map = map;
   }
 
-  renderValue(value) {
-    return <EnumComponent values={this.map} enumKey={this.read(value)} />;
+  renderValue(value, _index, _key, meta) {
+    const upMeta = metaMix(meta, this.meta);
+    const rvalue = this.read(value);
+    if (rvalue === undefined)
+      return <EnumComponent
+        values={{ [undefined]: upMeta.na }}
+        enumKey={undefined}
+        tooltip={upMeta.naTooltip}
+      />;
+
+    return <EnumComponent values={this.map} enumKey={rvalue} />;
   }
 
-  mapped(value) {
-    return this.map[this.read(value)];
+  mapped(value, meta) {
+    const upMeta = metaMix(meta, this.meta);
+    return this.map[this.read(value)] ?? upMeta.na;
   }
 
   format(value, meta) {
     const upMeta = metaMix(meta, this.meta);
-    return upMeta.t(this.mapped(value).title);
+    return upMeta.t(this.mapped(value, meta).title);
   }
 
   filter(value, filterValue) {
@@ -280,8 +327,8 @@ export class Enum extends Component {
   }
 
   Filter(props) {
-    const { type, value, onChange, dataKey, data } = props;
-    const c = useCast();
+    const { type, value, onChange, dataKey, data, dependencies } = props;
+    const c = useCast(dependencies?.MagicContext ?? MagicContext);
     const numbers = enumCount(type.declaration, data, dataKey);
 
     const filtersEl = Object.values(type.declaration).map(key => (
@@ -295,6 +342,7 @@ export class Enum extends Component {
           ...value,
           [key]: true,
         })}
+        dependencies={dependencies}
       />
     ));
 
@@ -491,6 +539,7 @@ export class RecurseBool extends Bool {
   }
 
   onChange(value, previous) {
+    // console.log("RecurseBool.onChange", value, previous);
     super.onChange(value, previous);
     const rvalue = value ?? {};
     const rprevious = previous ?? {};
@@ -649,8 +698,8 @@ export class DateTime extends String {
   }
 
   Filter(props) {
-    const { dataKey, type, value, onChange } = props;
-    const c = useCast();
+    const { dataKey, type, value, onChange, dependencies } = props;
+    const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
     return (<Paper data-testid={"filter-" + dataKey} className={c("padSmall verticalSmall")}>
       <TextField

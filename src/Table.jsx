@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import MyPropTypes from "./prop-types";
 import { Paper } from "@material-ui/core";
 import MaybeTip from "./MaybeTip";
-import { useCast } from "@tty-pt/styles";
+import { useCast, MagicContext } from "@tty-pt/styles";
 import useFilters from "./useFilters";
 import IconButton from "./IconButton";
 
@@ -13,6 +13,7 @@ const defaultInvalidCast = "colorErrorLight";
 const defaultTitleCast = "fontWeightBold";
 const defaultDetailsCast = "pad horizontal flexWrap flexGrowChildren";
 const defaultTableCast = "tableLayoutFixed sizeHorizontalFull";
+const defaultDetailCast = "overflowHidden";
 
 export function titleCamelCase(camelCase) {
   const almost = camelCase.replace(/([A-Z])/g, function (g) { return " " + g; });
@@ -20,9 +21,9 @@ export function titleCamelCase(camelCase) {
 }
 
 function Details(props) {
-  const { rowData, type, details, config, index, meta: detailsMeta } = props;
+  const { rowData, type, details, config, index, meta: detailsMeta, dependencies } = props;
 
-  const c = useCast();
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   const {
     titleFormat = title => title + ": ",
@@ -31,6 +32,7 @@ function Details(props) {
     titleCast = defaultTitleCast,
     headerCast = defaultHeaderCast,
     tableCast = defaultTableCast,
+    detailCast = defaultDetailCast,
     Tooltip = MaybeTip,
     renderValue,
     table,
@@ -41,10 +43,11 @@ function Details(props) {
   const headerClass = c(headerCast);
   const titleClass = c(titleCast);
   const invalidClass = c(invalidCast);
+  const detailClass = c(detailCast);
 
   const maybeTableMap = {
     [true]: (field, value, pType, subType, meta) => {
-      const upMeta = { ...meta, ...pType.meta, ...subType.meta };
+      const upMeta = { ...meta, ...pType.meta };
 
       function renderRecurse(getSubInstance) {
         return (<tr key={field + "-children"}>
@@ -53,7 +56,6 @@ function Details(props) {
               <tbody>
                 {
                   Object.keys(value)
-                    .map(key => mapDetails(key, value[key], subType, getSubInstance(key), upMeta))
                     .map(key => mapDetails(key, value[key], subType, getSubInstance(key), upMeta))
                 }
               </tbody>
@@ -75,7 +77,7 @@ function Details(props) {
         return (<>
           <tr key={field}>
             <td className={headerClass}>
-              { renderValue ? <span>{ subType.renderValue(value, index, field) }</span> : null }
+              { renderValue ? <span>{ subType.renderValue(value, index, field, upMeta) }</span> : null }
               <span className={titleClass}>
                 {
                   titleFormat(meta.t(pType.SubType
@@ -86,7 +88,7 @@ function Details(props) {
               </span>
             </td>
             <td className={cellClass}>
-              <Tooltip tooltip={tooltip}>{ children }</Tooltip>
+              <Tooltip tooltip={tooltip} dependencies={dependencies}>{ children }</Tooltip>
             </td>
           </tr>
           { recurseEl }
@@ -103,7 +105,7 @@ function Details(props) {
       return Component;
     },
     [false]: (field, value, pType, subType, meta) => {
-      const upMeta = { ...meta, ...pType.meta, ...subType.meta };
+      const upMeta = { ...meta, ...pType.meta };
 
       function renderRecurse(getSubInstance) {
         return (<div className={c(containerCast)} key={field + "-children"}>
@@ -126,7 +128,7 @@ function Details(props) {
 
         return (<>
           <div key={field} className={headerClass}>
-            { renderValue ? <span>{ subType.renderValue(value, index, field) }</span> : null }
+            { renderValue ? <span>{ subType.renderValue(value, index, field, upMeta) }</span> : null }
             <span className={titleClass}>
               {
                 titleFormat(meta.t(pType.SubType
@@ -180,7 +182,7 @@ function Details(props) {
       </tbody>
     </table>);
   else
-    return <div>{detailsEl}</div>;
+    return <div className={detailClass}>{detailsEl}</div>;
 }
 
 Details.propTypes = {
@@ -192,14 +194,15 @@ Details.propTypes = {
   type: PropTypes.any.isRequired,
   config: PropTypes.object,
   index: MyPropTypes.integer.isRequired,
+  dependencies: PropTypes.object,
 };
 
 function DetailsPanel(props) {
   const {
     details = [], type, rowData = {},
-    config = {}, index, meta,
+    config = {}, index, meta, dependencies,
   } = props;
-  const c = useCast();
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
   const { detailsCast = defaultDetailsCast } = config;
 
   function renderDetails(key, rowData, details) {
@@ -211,6 +214,7 @@ function DetailsPanel(props) {
       config={config}
       index={index}
       meta={meta}
+      dependencies={dependencies}
     />);
   }
 
@@ -227,17 +231,18 @@ DetailsPanel.propTypes = {
     t: PropTypes.func.isRequired,
   }),
   type: PropTypes.any.isRequired,
-  index: PropTypes.object.isRequired,
+  index: MyPropTypes.integer.isRequired,
+  dependencies: PropTypes.object,
 };
 
 function Line(props) {
-  const { data, index, type, className, columns } = props;
-  const c = useCast();
+  const { data, index, type, className, columns, dependencies } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
   const colClass = c("pad") + " " + className;
 
   const columnsEl = Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => (
     <td className={colClass} key={key}>
-      { type.types[key].renderColumn(value, index, key) }
+      { type.types[key].renderColumn(value, index, key, type.meta) }
     </td>
   ));
 
@@ -250,12 +255,13 @@ Line.propTypes = {
   type: PropTypes.any.isRequired,
   columns: PropTypes.object.isRequired,
   className: PropTypes.string,
+  dependencies: PropTypes.object,
 };
 
 function ExpandLine(props) {
-  const { data, index, type, className, icons, detailPanel, columns } = props;
+  const { data, index, type, className, icons, detailPanel, columns, dependencies } = props;
   const [ open, setOpen ] = useState(false);
-  const c = useCast();
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
   const colClass = c("pad") + " " + className;
 
   const columnsEl = [(
@@ -269,7 +275,7 @@ function ExpandLine(props) {
     </td>
   )].concat(Object.entries(data).filter(([key]) => columns[key]).map(([key, value]) => (
     <td key={key} className={colClass}>
-      { type.types[key].renderColumn(value, index, key) }
+      { type.types[key].renderColumn(value, index, key, type.meta) }
     </td>
   )));
 
@@ -291,13 +297,14 @@ ExpandLine.propTypes = {
   icons: PropTypes.object.isRequired,
   detailPanel: PropTypes.func.isRequired,
   columns: PropTypes.object.isRequired,
+  dependencies: PropTypes.object,
 };
 
 const horizontalCenterCast = "horizontal flexWrap alignItemsCenter";
 
 function DefaultToolbar(props) {
-  const { title, children } = props;
-  const c = useCast();
+  const { title, children, dependencies } = props;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   return (<div className={c(horizontalCenterCast + " justifyContentSpaceBetween")}>
     <span className={c("h5")}>{ title }</span>
@@ -310,15 +317,16 @@ function DefaultToolbar(props) {
 DefaultToolbar.propTypes = {
   children: PropTypes.node,
   title: PropTypes.string,
+  dependencies: PropTypes.object,
 };
 
 export default function Table(props) {
-  const { title = "", name = "table", data, type, columns, details = [], options = {}, icons, t } = props;
+  const { title = "", name = "table", data, type, columns, details = [], options = {}, icons, t, dependencies } = props;
   const { components = {}, typedDetails = {} } = options;
   const { Toolbar = DefaultToolbar } = components;
-  const { filtersEl, filteredData } = useFilters({ data, type, columns, options: options.filters });
+  const { filtersEl, filteredData } = useFilters({ data, type, columns, options: options.filters, dependencies });
   const upMeta = { t: t ?? type.meta?.t ?? (a => a) };
-  const c = useCast();
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   const div = details.length;
 
@@ -330,6 +338,7 @@ export default function Table(props) {
       rowData={rowData}
       index={index}
       meta={upMeta}
+      dependencies={dependencies}
     />);
   } : null;
 
@@ -388,4 +397,5 @@ Table.propTypes = {
   type: PropTypes.any.isRequired,
   title: PropTypes.string,
   name: PropTypes.string,
+  dependencies: PropTypes.object,
 };
