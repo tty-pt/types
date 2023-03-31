@@ -210,6 +210,10 @@ export class Integer {
     if (this.meta.onChange)
       this.meta.onChange(value);
   }
+
+  detailsTooltip(value, meta) {
+    return value === undefined ? metaMix(meta, this.meta).naTooltip : this.format(value, meta);
+  }
 }
 
 export class String extends Integer {
@@ -374,7 +378,7 @@ export class Bool extends Enum {
   }
 
   read(value) {
-    return !value;
+    return value !== undefined && !value;
   }
 }
 
