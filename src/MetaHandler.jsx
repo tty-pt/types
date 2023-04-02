@@ -1,13 +1,26 @@
 export class MetaHandler {
-  constructor(type, indexable, dependencies = {}) {
+  constructor(type, fetcher, indexer, options = {}) {
     this.type = type;
-    this.adapter = dependencies?.adapter ?? (a => a);
-    this.dependencies = dependencies;
+    this.adapter = options.adapter ?? (a => a);
     this.subscriptions = new Map();
     this.sep = "@";
-    this.indexable = indexable;
-    this.cache = this.indexable ? [] : this.type.preprocess({}, this.type.meta, this.sep);
+    this.global = options.global ?? false;
+    this.fetcher = fetcher;
+    this.fetcherSubscribe = options.fetcherSubscribe ?? "subscribe";
+    this.fetcherUnsubscribe = options.fetcherUnsubscribe ?? "unsubsribe";
+    this.indexKey = options.indexKey ?? "index";
+    this.indexer = indexer;
+    this.cache = this.indexer ? [] : this.type.preprocess({}, this.type.meta, this.sep);
     this.last = null;
+
+    if (this.indexer)
+      this.indexerSub = this.indexer.subscribe(this.setIndex.bind(this));
+    else
+      this.dontSetIndex();
+
+    const boundSetData = this.setData.bind(this);
+    this.fetcher.getAll(boundSetData);
+    this.fetcherSub = this.fetcher[this.fetcherSubscribe](boundSetData);
   }
 
   updateSubs() {
@@ -17,9 +30,14 @@ export class MetaHandler {
 
   destroy() {
     this.updateSubs(null);
+    this.fetcher[this.fetcherUnsubscribe](this.fetcherSub);
+    this.fetcherSub = null;
+    this.indexer.unsubscribe(this.indexerSub);
     delete this.subscriptions;
     this.cache = null;
     this.last = null;
+    this.fetcher = null;
+
   }
 
   subscribe(onUpdate) {
@@ -32,7 +50,7 @@ export class MetaHandler {
   // setState() {}
 
   onChange(value) {
-    if (!this.dependencies.global)
+    if (!this.global)
       return;
 
     else if (this.index)
@@ -45,15 +63,39 @@ export class MetaHandler {
   }
 
   transform(data) {
-    if (!this.indexable)
+    if (!this.indexer)
       return this.type.preprocess(data, this.type.meta, this.sep);
 
     if (!this.index)
       return [];
 
-    return Object.entries(this.index ?? {}).map(([key, robot]) => this.adapter(this.type.preprocess({
-      ...data, // TODO only this robots info?
-      robot,
+    return Object.entries(this.index ?? {}).map(([key, index]) => this.adapter(this.type.preprocess({
+      ...data,
+      [this.indexKey]: index,
     }, this.type.meta, key + this.sep)));
+  }
+
+  setData(data) {
+    const newState = this.transform(data);
+    if (this.last)
+      this.onChange(newState);
+    this.cache = newState;
+    this.last = data;
+    this.updateSubs();
+  }
+
+  setIndex(index) {
+    if (Object.keys(index).length) {
+      this.index = index;
+      this.cache = this.transform(this.last);
+    } else
+      this.cache = this.index = null;
+    this.updateSubs();
+  }
+
+  dontSetIndex() {
+    this.index = null;
+    this.cache = this.transform(this.last);
+    this.updateSubs();
   }
 }
