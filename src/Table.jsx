@@ -327,7 +327,10 @@ export default function Table(props) {
   const { components = {}, typedDetails = {}, thCast = defaultThCast, tableCast = defaultTableCast } = options;
   const { Toolbar = DefaultToolbar } = components;
   const { filtersEl, filteredData } = useFilters({ data, type, columns, options: options.filters, dependencies });
-  const upMeta = { t: t ?? type.meta?.t ?? (a => a) };
+  const upMeta = {
+    t: t ?? (a => a),
+    ...type.meta,
+  };
   const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
   const div = details.length;
