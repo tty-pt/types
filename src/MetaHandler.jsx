@@ -10,7 +10,8 @@ export class MetaHandler {
     this.fetcherUnsubscribe = options.fetcherUnsubscribe ?? "unsubsribe";
     this.indexKey = options.indexKey ?? "index";
     this.indexer = indexer;
-    this.cache = this.indexer ? [] : this.type.preprocess({}, this.type.meta, this.sep);
+    this.toIndex = !options.noIndex;
+    this.cache = this.toIndex ? [] : this.type.preprocess({}, this.type.meta, this.sep);
     this.last = null;
 
     if (this.indexer)
@@ -63,7 +64,7 @@ export class MetaHandler {
   }
 
   transform(data) {
-    if (!this.indexer)
+    if (!this.toIndex)
       return this.type.preprocess(data, this.type.meta, this.sep);
 
     if (!this.index)
