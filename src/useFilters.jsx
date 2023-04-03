@@ -1,26 +1,28 @@
 import React, { useState, useMemo } from "react";
 
-function getFilterColumns(getType, columns, prefix = "") {
-  return Object.entries(columns).reduce(
-    (a, [key, value]) => {
-      if (!value)
-        return a;
+function getFilterColumnsEx(ret, type, columns, prefix = "") {
+  if (columns.filter)
+    ret.push(prefix.substring(1));
 
-      const type = getType(key);
-      console.assert(type);
+  if (!type.types && !type.SubType)
+    return;
 
-      if (type.types)
-        return getFilterColumns(key => type.types[key], value, prefix + key + ".");
+  const subType = type.SubType ? new type.SubType("dummy", {}, ...type.subTypeArgs) : null;
+  const getType = type.types ? key => type.types[key] : () => subType;
 
-      if (type.SubType) {
-        const subType = new type.SubType("dummy", {}, ...type.subTypeArgs);
-        return getFilterColumns(() => subType, value, prefix + key + ".");
-      }
+  for (const [key, column] of Object.entries(columns)) {
+    if (!column)
+      continue;
 
-      return value.filter ? a.concat(prefix + key) : a;
-    },
-    [],
-  );
+    const type = getType(key);
+    getFilterColumnsEx(ret, type, column, prefix + "." + key);
+  }
+}
+
+function getFilterColumns(type, columns) {
+  let ret = [];
+  getFilterColumnsEx(ret, type, columns);
+  return ret;
 }
 
 // creds to Pedro Cristóvão.
@@ -93,10 +95,11 @@ function getFiltersEl(type, data, filters, setFilters, dependencies) {
 }
 
 export default function useFilters({ data, type, columns, dependencies }) {
-  const filterColumns = useMemo(() => getFilterColumns(key => type.types[key], columns), [columns]);
+  const filterColumns = useMemo(() => getFilterColumns(type, columns), [columns]);
   const [ filters, setFilters ] =  useState(keyedFilter(type, filterColumns));
   const filtersEl = useMemo(() => getFiltersEl(type, data, filters, setFilters, dependencies), [data, filters]);
   const filteredData = useMemo(() => data ? data.filter(item => isIncluded(type, columns, filters, item)) : [], [data, filters, columns]);
+  console.log("useFilters", filterColumns);
 
   if (!data)
     return {
