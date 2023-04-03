@@ -732,6 +732,15 @@ export class DateTime extends String {
       />
     </Paper>);
   }
+
+  preprocess(data, meta) {
+    const ret = this.metaPreprocess(data, meta) ?? data;
+
+    if (!ret)
+      return;
+
+    return ret * (this.meta.measure ?? 1);
+  }
 }
 
 export class Fun extends Bool {
