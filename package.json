@@ -1,6 +1,6 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.0.4-62",
+  "version": "0.0.4-63",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "build/main.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "@material-ui/core": "^4.12.4",
     "@material-ui/icons": "^4.11.3",
     "@tty-pt/scripts": "0.0.1-49",
-    "@tty-pt/styles": "0.0.3-20",
+    "@tty-pt/styles": "0.0.3-21",
     "prop-types": "^15.8.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0"
@@ -39,7 +39,7 @@
   "peerDependencies": {
     "@material-ui/core": "^4.12.4",
     "@material-ui/icons": "^4.11.3",
-    "@tty-pt/styles": "0.0.3-20",
+    "@tty-pt/styles": "0.0.3-21",
     "prop-types": "^15.8.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0"

@@ -65,7 +65,7 @@ export class MetaHandler {
 
   transform(data) {
     if (!this.toIndex)
-      return this.type.preprocess(data, this.type.meta, this.sep);
+      return this.type.preprocess(data, {}, this.sep);
 
     if (!this.index)
       return [];
@@ -73,7 +73,7 @@ export class MetaHandler {
     return Object.entries(this.index ?? {}).map(([key, index]) => this.adapter(this.type.preprocess({
       ...data,
       [this.indexKey]: index,
-    }, this.type.meta, key + this.sep)));
+    }, {}, key + this.sep)));
   }
 
   setData(data) {

@@ -5,7 +5,7 @@ specifiers:
   '@material-ui/core': ^4.12.4
   '@material-ui/icons': ^4.11.3
   '@tty-pt/scripts': 0.0.1-49
-  '@tty-pt/styles': 0.0.3-20
+  '@tty-pt/styles': 0.0.3-21
   prop-types: ^15.8.1
   react-dom: ^16.14.0
 
@@ -14,7 +14,7 @@ devDependencies:
   '@material-ui/core': 4.12.4_react-dom@16.14.0
   '@material-ui/icons': 4.11.3_c6chzr3pe63h5c7ozxbcn6k7dq
   '@tty-pt/scripts': 0.0.1-49_react-dom@16.14.0
-  '@tty-pt/styles': 0.0.3-20_dsba4t4vdo5rnbnwjdfzm3bbme
+  '@tty-pt/styles': 0.0.3-21_dsba4t4vdo5rnbnwjdfzm3bbme
   prop-types: 15.8.1
   react-dom: 16.14.0
 
@@ -1586,8 +1586,8 @@ packages:
       - webpack-dev-server
     dev: true
 
-  /@tty-pt/styles/0.0.3-20_dsba4t4vdo5rnbnwjdfzm3bbme:
-    resolution: {integrity: sha512-O/LZ/Vyfvmdg5NBPNpS996gRq0KOtX+q9ZDbDCgVqAGNSPsdShsi5pimsPiESGNw3DESqLJ0/g4UaF6PB9O9Sg==}
+  /@tty-pt/styles/0.0.3-21_dsba4t4vdo5rnbnwjdfzm3bbme:
+    resolution: {integrity: sha512-aS2fX6WRLu1IxTpfyCrFGGp6MvwAhyK2wpHhsfTeSoXIaoKoK+ID/ss0kOhA9EvV1wUzSTbeioEa33vo9wiAlA==}
     peerDependencies:
       '@material-ui/core': ^4.12.4
       prop-types: ^15.8.1

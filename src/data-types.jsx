@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Tooltip, Button, Paper, IconButton, InputBase, Chip, TextField, Checkbox as CheckboxComponent } from "@material-ui/core";
+import { Tooltip, Button, Paper, IconButton, InputBase, Chip, TextField, Checkbox as CheckboxComponent, MenuItem } from "@material-ui/core";
 import SearchIcon from "@material-ui/icons/Search";
 import CancelIcon from "@material-ui/icons/Cancel";
 import { useCast, MagicContext } from "@tty-pt/styles";
-import { enumCount } from "./utils";
+import { mapCount } from "./utils";
 import { Percent as PercentComponent } from "./Percent";
 import { Enum as EnumComponent } from "./Enum";
 
@@ -56,6 +56,8 @@ function toDateTimeLocal(date) {
 function delKey(object, key) {
   const ret = { ...object };
   delete ret[key];
+  if (!Object.keys(ret).length)
+    return null;
   return ret;
 }
 
@@ -113,6 +115,7 @@ TextFilter.propTypes = {
   dependencies: PropTypes.object,
 };
 
+export
 function Filter(props) {
   const { chipKey, label, active, value, dependencies, ...rest } = props;
   const c = useCast(dependencies?.MagicContext ?? MagicContext);
@@ -140,8 +143,12 @@ export class Integer {
     this.detailsTitle = title;
   }
 
-  read(value) {
+  realRead(value) {
     return value;
+  }
+
+  read(value) {
+    return this.realRead(value);
   }
 
   renderValue(value, _index, _key, meta) {
@@ -295,7 +302,7 @@ Percent.extend = function extendPercent(icons, options = {}) {
 export class Enum extends Component {
   constructor(title, meta, declaration, map) {
     super(title, meta);
-    this.initialFilter = {};
+    this.initialFilter = null;
     this.declaration = declaration;
     this.map = map;
   }
@@ -324,35 +331,37 @@ export class Enum extends Component {
   }
 
   filter(value, filterValue) {
-    if (!Object.keys(filterValue).length)
+    if (filterValue === null)
       return true;
+
     const rvalue = this.read(value);
     return filterValue[rvalue];
   }
 
   Filter(props) {
-    const { type, value, onChange, dataKey, data, dependencies } = props;
+    const { type, superType, value, onChange, dataKey, data, dependencies } = props;
     const c = useCast(dependencies?.MagicContext ?? MagicContext);
-    const numbers = enumCount(type.declaration, data, dataKey);
+    const numbers = mapCount(superType, data, dataKey);
 
-    const filtersEl = Object.values(type.declaration).map(key => (
-      <Filter
+    const filtersEl = Object.values(type.declaration).map(key => {
+      return (<Filter
         key={key}
         chipKey={dataKey + "-" + key}
         label={type.map[key].title}
-        value={numbers[key]}
-        active={value[key]}
-        onClick={value[key] ? () => onChange(delKey(value, key)) : () => onChange({
-          ...value,
+        value={numbers[key] ?? 0}
+        active={value ? value[key] : false}
+        onClick={value?.[key] ? () => onChange(delKey(value, key)) : () => onChange({
+          ...(value ?? {}),
           [key]: true,
         })}
         dependencies={dependencies}
-      />
-    ));
+      />);
+    });
 
     return (
-      <div data-testid={"filter-" + dataKey} className={c("horizontal0 flexWrap")}>
-        { filtersEl }
+      <div data-testid={"filter-" + dataKey} className={c("horizontalSmall alignItemsCenter justifyContentSpaceBetween flexWrap")}>
+        <div>{type.title}</div>
+        <div className={c("horizontal0 flexWrap")}>{ filtersEl }</div>
       </div>
     );
   }
@@ -377,8 +386,70 @@ export class Bool extends Enum {
     }, map);
   }
 
-  read(value) {
-    return value !== undefined && !value;
+  filter(value, filterValue) {
+    if (filterValue === null)
+      return true;
+
+    const rvalue = this.realRead(value);
+
+    if (filterValue === "undefined")
+      return value === undefined;
+
+    return rvalue === filterValue;
+  }
+
+  Filter(props) {
+    if (props.superType.meta?.Filter?.Bool)
+      return props.superType.meta.Filter.Bool(props);
+
+    const { type, superType, value, onChange, dataKey, data } = props;
+    const numbers = mapCount(superType, data, dataKey);
+
+    const valuesMap = {
+      0: {
+        value: 0,
+        mapped: null,
+        label: "unfiltered (" + (numbers[null] ?? 0) + ")",
+      },
+      1: {
+        value: 1,
+        mapped: true,
+        label: "true (" + (numbers[true] ?? 0) + ")",
+      },
+      2: {
+        value: 2,
+        mapped: false,
+        label: "false (" + (numbers[false] ?? 0) + ")",
+      },
+      3: { // only show undefined values
+        value: 3,
+        mapped: "undefined",
+        label: "unset (" + (numbers[undefined] ?? 0) + ")",
+      },
+    };
+
+    const reverseMap = { [null]: 0, [true]: 1, [false]: 2, ["undefined"]: 3 };
+    const [current, setCurrent] = useState(reverseMap[value]);
+    const mapped = valuesMap[current];
+
+    function handleChange(e) {
+      const key = new Number(e.target.value);
+      setCurrent(key);
+      const mapped = valuesMap[key];
+      onChange(mapped.mapped);
+    }
+
+    // helperText="Please select your currency"
+    return (<TextField
+      select
+      label={type.title}
+      value={mapped.value}
+      onChange={handleChange}
+    >
+      {Object.values(valuesMap).map((option) => (
+        <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+      ))}
+    </TextField>);
   }
 }
 
@@ -431,7 +502,22 @@ export class RecurseBool extends Bool {
     this.types = types;
   }
 
+  realRead(value, dataKey = []) {
+    if (value === undefined)
+      return;
+
+    if (dataKey.length) {
+      const [ head, ...tail ] = dataKey;
+      return this.types[head].realRead(value[head], tail);
+    }
+
+    return value;
+  }
+
   read(value) {
+    if (value === undefined)
+      return;
+
     const entries = Object.entries(value);
 
     for (let i = 0; i < entries.length; i++) {
@@ -439,10 +525,10 @@ export class RecurseBool extends Bool {
       const [ key, value ] = entry;
       const type = this.types[key];
       if (type.invalid(value))
-        return true;
+        return false;
     }
 
-    return false;
+    return true;
   }
 
   invalid(value) {
@@ -565,18 +651,31 @@ export class DictionaryOf extends Bool {
     this.subTypeArgs = subTypeArgs;
   }
 
-  read(value) {
+  realRead(value, dataKey = []) {
     if (!value)
       return undefined;
 
-    const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
+    if (dataKey.length) {
+      const [ head, ...tail ] = dataKey;
+      const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
+      return Object.keys(value).reduce((a, key) => dummy.realRead(value[key][head], tail) ?? a);
+    }
+
+    return value === undefined ? undefined : true;
+  }
+
+  read(value) {
+    if (value === undefined)
+      return;
+
     const keys = Object.keys(value);
 
+    const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
     for (let i = 0; i < keys.length; i++)
       if (dummy.invalid(value[keys[i]]))
-        return true;
+        return false;
 
-    return false;
+    return true;
   }
 
   invalid(value) {

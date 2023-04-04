@@ -1,5 +1,6 @@
 export {
   extend,
+  Filter,
   Integer,
   String,
   Component,
@@ -25,6 +26,7 @@ export { useMeta, withMeta } from "./useMeta";
 // export { Enum } from "./Enum";
 // export { Percent } from "./Percent";
 export { MetaHandler } from "./MetaHandler";
+export { mapCount } from "./utils";
 
 export const Table = InnerTable;
 export const List = InnerList;

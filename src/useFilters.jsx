@@ -55,8 +55,8 @@ function isIncluded(type, columns, filters, item) {
   return true;
 }
 
-function _getFiltersEl(res, type, data, filters, setFilters, dependencies, prefix = "") {
-  // console.log("_getFiltersEl0", res, type, data, filters, setFilters, prefix);
+function _getFiltersEl(res, superType, type, data, filters, setFilters, dependencies, prefix = "") {
+  // console.log("_getFiltersEl0", res, superType, type, data, filters, setFilters, prefix);
   for (const [key, subType] of Object.entries(type.types)) {
     const filter = filters[key];
     // console.log("_getFiltersEl", key, subType, filter);
@@ -67,7 +67,7 @@ function _getFiltersEl(res, type, data, filters, setFilters, dependencies, prefi
     const fullKey = (prefix ? prefix + "." : "") + key;
 
     if (subType.types)
-      _getFiltersEl(res, subType, data, filter, (newValue, subKey) => setFilters({
+      _getFiltersEl(res, superType, subType, data, filter, (newValue, subKey) => setFilters({
         ...filter,
         [subKey]: newValue,
       }, key), dependencies, fullKey);
@@ -77,6 +77,7 @@ function _getFiltersEl(res, type, data, filters, setFilters, dependencies, prefi
       dataKey={fullKey}
       data={data}
       type={subType}
+      superType={superType}
       value={filter}
       onChange={value => setFilters(value, key)}
     />);
@@ -87,7 +88,7 @@ function getFiltersEl(type, data, filters, setFilters, dependencies) {
   if (!data)
     return [];
   let res = [];
-  _getFiltersEl(res, type, data, filters, (value, key) => setFilters({
+  _getFiltersEl(res, type, type, data, filters, (value, key) => setFilters({
     ...filters,
     [key]: value,
   }), dependencies);
@@ -99,7 +100,7 @@ export default function useFilters({ data, type, columns, dependencies }) {
   const [ filters, setFilters ] =  useState(keyedFilter(type, filterColumns));
   const filtersEl = useMemo(() => getFiltersEl(type, data, filters, setFilters, dependencies), [data, filters]);
   const filteredData = useMemo(() => data ? data.filter(item => isIncluded(type, columns, filters, item)) : [], [data, filters, columns]);
-  console.log("useFilters", filterColumns);
+  // console.log("useFilters", filterColumns, filters);
 
   if (!data)
     return {
