@@ -8,6 +8,7 @@ import { mapCount } from "./utils";
 import { Percent as PercentComponent } from "./Percent";
 import { Enum as EnumComponent } from "./Enum";
 
+export
 const defaultMeta = {
   na: {
     title: "N/A",
@@ -358,10 +359,11 @@ export class Enum extends Component {
       />);
     });
 
+    // <div>{type.title}</div>
+    // <div className={c("horizontal0 flexWrap")}>{ filtersEl }</div>
     return (
       <div data-testid={"filter-" + dataKey} className={c("horizontalSmall alignItemsCenter justifyContentSpaceBetween flexWrap")}>
-        <div>{type.title}</div>
-        <div className={c("horizontal0 flexWrap")}>{ filtersEl }</div>
+        { filtersEl }
       </div>
     );
   }
@@ -399,6 +401,7 @@ export class Bool extends Enum {
   }
 
   Filter(props) {
+    // console.log("Bool.Filter", props, props.superType.meta);
     if (props.superType.meta?.Filter?.Bool)
       return props.superType.meta.Filter.Bool(props);
 
