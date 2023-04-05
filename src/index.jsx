@@ -1,5 +1,6 @@
 export {
   extend,
+  metaMix,
   Filter,
   Integer,
   String,
