@@ -787,8 +787,26 @@ export class DateTime extends String {
     this.initialFilter = {};
   }
 
-  read(value) {
-    return toDateTimeLocal(value);
+  renderValue(value, _index, _key, meta) {
+    const upMeta = metaMix(meta, this.meta);
+    const rvalue = this.read(value);
+    if (rvalue !== undefined)
+      return this.format(value, meta);
+    else
+      return <Tooltip title={upMeta.naTooltip}>{upMeta.na.title}</Tooltip>;
+  }
+
+  format(value) {
+    switch (this.meta.format) {
+      case "date":
+        return value.toLocaleDateString();
+      case "time":
+        return value.toLocaleTimeString();
+      default:
+        return value.getDate() === (new Date()).getDate()
+          ? value.toLocaleTimeString()
+          : value.toLocaleString();
+    }
   }
 
   invalid(value) {
@@ -844,7 +862,7 @@ export class DateTime extends String {
     if (!ret)
       return;
 
-    return ret * Math.floor(this.meta.measure ?? 1);
+    return Math.floor(ret * this.meta.measure ?? 1);
   }
 }
 
