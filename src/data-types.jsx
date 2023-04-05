@@ -198,7 +198,7 @@ export class Integer {
   }
 
   preprocess(data, meta) {
-    return this.metaPreprocess(data, meta) ?? data;
+    return this.metaPreprocess(data, meta) ?? data ?? this.meta.default;
   }
 
   metaInitial(meta, data) {
@@ -590,12 +590,8 @@ export class RecurseBool extends Bool {
         (parentKey ?? "@")
       );
 
-    if (!gotten) {
-      // const ret = this.initial(meta, data);
-      // console.log("RecurseBool.preprocess not gotten", this.title, parentKey, data, upMeta, ret);
-      // return ret;
+    if (gotten === undefined)
       return this.meta.default;
-    }
 
     // const pKey = beforeAt && afterAt ? "" : (parentKey ?? "@");
 
@@ -621,11 +617,11 @@ export class RecurseBool extends Bool {
   }
 
   diff(value, previous) {
-    if (value && !previous || !value)
+    if (value && !previous || !value && previous)
       return true;
 
     for (let key in this.types)
-      if (this.types[key].diff(value[key], previous[key]))
+      if (this.types[key].diff(value?.[key], previous?.[key]))
         return true;
 
     return false;
