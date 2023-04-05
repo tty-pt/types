@@ -18,6 +18,7 @@ const defaultMeta = {
   naTooltip: "Not Available",
 };
 
+export
 function metaMix(a, b) {
   const c = { ...a };
   delete c.getter;
@@ -620,8 +621,14 @@ export class RecurseBool extends Bool {
     if (value && !previous || !value && previous)
       return true;
 
+    if (!value && !previous)
+      return false;
+
+    const rvalue = value ?? {};
+    const rprevious = previous ?? {};
+
     for (let key in this.types)
-      if (this.types[key].diff(value?.[key], previous?.[key]))
+      if (this.types[key].diff(rvalue[key], rprevious[key]))
         return true;
 
     return false;
@@ -837,7 +844,7 @@ export class DateTime extends String {
     if (!ret)
       return;
 
-    return ret * (this.meta.measure ?? 1);
+    return ret * Math.floor(this.meta.measure ?? 1);
   }
 }
 
