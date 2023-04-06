@@ -714,6 +714,12 @@ export class DictionaryOf extends Bool {
   diff(value, previous) {
     const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
 
+    if (value && !previous || !value && previous)
+      return true;
+
+    if (!value && !previous)
+      return false;
+
     for (let key in value) {
       if (!previous[key] || dummy.diff(value[key], previous[key]))
         return true;
@@ -729,9 +735,11 @@ export class DictionaryOf extends Bool {
   onChange(value, previous) {
     const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
     super.onChange(value, previous);
-    Object.keys(value).forEach(key => {
-      if (dummy.diff(value[key], previous[key]))
-        dummy.onChange(value[key], previous[key]);
+    const rvalue = value ?? {};
+    const rprevious = previous ?? {};
+    Object.keys(rvalue).forEach(key => {
+      if (dummy.diff(rvalue[key], rprevious[key]))
+        dummy.onChange(rvalue[key], rprevious[key]);
     });
   }
 }
@@ -798,14 +806,14 @@ export class DateTime extends String {
 
   format(value) {
     switch (this.meta.format) {
-      case "date":
-        return value.toLocaleDateString();
-      case "time":
-        return value.toLocaleTimeString();
-      default:
-        return value.getDate() === (new Date()).getDate()
-          ? value.toLocaleTimeString()
-          : value.toLocaleString();
+    case "date":
+      return value.toLocaleDateString();
+    case "time":
+      return value.toLocaleTimeString();
+    default:
+      return value.getDate() === (new Date()).getDate()
+        ? value.toLocaleTimeString()
+        : value.toLocaleString();
     }
   }
 
