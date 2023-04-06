@@ -384,8 +384,8 @@ Enum.extend = function extendEnum(declaration, map, options = {}) {
 export class Bool extends Enum {
   constructor(title, meta, map) {
     super(title, meta, {
-      OK: false,
-      ERROR: true,
+      OK: true,
+      ERROR: false,
     }, map);
   }
 
