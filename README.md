@@ -105,7 +105,7 @@ This is a **string** but it is somewhat similar to "getter", it is used to autom
 ## default
 When the data is undefined, return the value of this property.
 
-## if
+## if \(deprecated\)
 This is a **function** with the following signature:
 ```js
 function if(type, data, meta) { /* ... */ }

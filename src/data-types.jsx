@@ -455,6 +455,10 @@ export class Bool extends Enum {
       ))}
     </TextField>);
   }
+
+  invalid(value) {
+    return !this.read(value);
+  }
 }
 
 Bool.extend = function extendBool(map, options = {}) {
@@ -535,9 +539,9 @@ export class RecurseBool extends Bool {
     return true;
   }
 
-  invalid(value) {
-    return value === undefined || this.read(value);
-  }
+  // invalid(value) {
+  //   return value === undefined || !this.read(value);
+  // }
 
   initial(meta, data) {
     const mi = this.metaInitial(meta, data);
