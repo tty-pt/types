@@ -191,24 +191,16 @@ export class Integer {
     return Math.floor(Math.random());
   }
 
-  metaPreprocess(data, meta) {
-    if (!(this.meta.getter && this.meta.if && this.meta.if(this, data, meta)))
-      return;
+  metaPreprocess(data, meta, parentKey) {
+    const afterAt = (parentKey ?? "@").split("@")[1];
+    const dots = afterAt.split(".");
 
-    return this.meta.getter(this, data, meta);
+    if (dots.length && dots[dots.length - 1] && this.meta.getter)
+      return this.meta.getter(this, data, meta, parentKey);
   }
 
-  preprocess(data, meta) {
-    return this.metaPreprocess(data, meta) ?? data ?? this.meta.default;
-  }
-
-  metaInitial(meta, data) {
-    if (this.meta.default && !(this.meta.if && this.meta.if(this, data)))
-      return this.meta.default;
-  }
-
-  initial(meta, data) {
-    return this.metaInitial(meta, data);
+  preprocess(data, meta, parentKey) {
+    return this.metaPreprocess(data, meta, parentKey) ?? data ?? this.meta.default;
   }
 
   diff(value, previous) {
@@ -524,13 +516,9 @@ export class RecurseBool extends Bool {
 
   read(value) {
     if (value === undefined)
-      return;
+      return false;
 
-    const entries = Object.entries(value);
-
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-      const [ key, value ] = entry;
+    for (const [key, value] of Object.entries(value)) {
       const type = this.types[key];
       if (type.invalid(value))
         return false;
@@ -539,32 +527,8 @@ export class RecurseBool extends Bool {
     return true;
   }
 
-  // invalid(value) {
-  //   return value === undefined || !this.read(value);
-  // }
-
-  initial(meta, data) {
-    const mi = this.metaInitial(meta, data);
-
-    if (mi)
-      return mi;
-
-    const upMeta = metaMix(meta, this.meta);
-
-    return Object.entries(this.types).reduce((a, [key, type]) => ({
-      ...a,
-      [key]: type.initial(upMeta, data),
-    }), {});
-  }
-
   preprocess(data, meta, parentKey) {
-    // console.log("RecurseBool.preprocess ENTRY", this.title, parentKey, meta, data, this.meta.getter);
-
-    if (this.meta.if && !this.meta.if(this, data, meta)) {
-      // console.log("RecurseBool.preprocess rejected", this.title, parentKey, meta, data);
-      return;
-    }
-
+    // console.log("RecurseBool.preprocess ENTRY", this.title, parentKey, meta, data);
     const upMeta = metaMix(meta, this.meta);
 
     const afterAt = (parentKey ?? "@").split("@")[1];
@@ -676,24 +640,19 @@ export class DictionaryOf extends Bool {
 
   read(value) {
     if (value === undefined)
-      return;
-
-    const keys = Object.keys(value);
+      return true;
 
     const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
-    for (let i = 0; i < keys.length; i++)
-      if (dummy.invalid(value[keys[i]]))
+
+    for (const key of Object.keys(value))
+      if (dummy.invalid(value[key]))
         return false;
 
     return true;
   }
 
-  invalid(value) {
-    return value === undefined || this.read(value);
-  }
-
-  preprocess(data, meta) {
-    const mp = this.metaPreprocess(data, meta);
+  preprocess(data, meta, parentKey) {
+    const mp = this.metaPreprocess(data, meta, parentKey);
 
     if (mp)
       return mp;
@@ -868,8 +827,8 @@ export class DateTime extends String {
     </Paper>);
   }
 
-  preprocess(data, meta) {
-    const ret = this.metaPreprocess(data, meta) ?? data;
+  preprocess(data, meta, parentKey) {
+    const ret = this.metaPreprocess(data, meta, parentKey) ?? data;
 
     if (!ret)
       return;
