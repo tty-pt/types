@@ -56,13 +56,8 @@ function isIncluded(type, columns, filters, item) {
 }
 
 function _getFiltersEl(res, superType, type, data, filters, setFilters, dependencies, prefix = "") {
-  // console.log("_getFiltersEl0", res, superType, type, data, filters, setFilters, prefix);
-  for (const [key, subType] of Object.entries(type.types)) {
-    const filter = filters[key];
-    // console.log("_getFiltersEl", key, subType, filter);
-
-    if (filter === undefined)
-      continue;
+  for (const [key, filter] of Object.entries(filters)) {
+    const subType = type.types[key];
 
     const fullKey = (prefix ? prefix + "." : "") + key;
 
