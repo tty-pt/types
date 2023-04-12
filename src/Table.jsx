@@ -242,7 +242,7 @@ function Line(props) {
   const c = useCast(dependencies?.MagicContext ?? MagicContext);
   const colClass = c("pad") + " " + className;
 
-  const columnsEl = Object.keys(columns).map(key => (
+  const columnsEl = columns.map(key => (
     <td className={colClass} key={key}>
       { type.types[key].renderColumn(data[key], index, key, type.meta) }
     </td>
@@ -255,7 +255,7 @@ Line.propTypes = {
   data: PropTypes.object.isRequired,
   index: PropTypes.number.isRequired,
   type: PropTypes.any.isRequired,
-  columns: PropTypes.object.isRequired,
+  columns: PropTypes.array.isRequired,
   className: PropTypes.string,
   dependencies: PropTypes.object,
 };
@@ -275,7 +275,7 @@ function ExpandLine(props) {
         onClick={() => setOpen(!open)}
       />
     </td>
-  )].concat(Object.keys(columns).map(key => (
+  )].concat(columns.map(key => (
     <td key={key} className={colClass}>
       { type.types[key].renderColumn(data[key], index, key, type.meta) }
     </td>
@@ -298,7 +298,7 @@ ExpandLine.propTypes = {
   className: PropTypes.string,
   icons: PropTypes.object.isRequired,
   detailPanel: PropTypes.func.isRequired,
-  columns: PropTypes.object.isRequired,
+  columns: PropTypes.array.isRequired,
   dependencies: PropTypes.object,
 };
 
@@ -323,10 +323,14 @@ DefaultToolbar.propTypes = {
 };
 
 export default function Table(props) {
-  const { title = "", name = "table", data, type, columns, details = [], options = {}, icons, t, dependencies } = props;
+  const {
+    title = "", name = "table", data, type,
+    columns = [], filters = [], details = [],
+    options = {}, icons, t, dependencies,
+  } = props;
   const { components = {}, typedDetails = {}, thCast = defaultThCast, tableCast = defaultTableCast } = options;
   const { Toolbar = DefaultToolbar } = components;
-  const { filtersEl, filteredData } = useFilters({ data, type, columns, options: options.filters, dependencies });
+  const { filtersEl, filteredData } = useFilters({ data, type, config: filters, dependencies });
   const upMeta = {
     t: t ?? (a => a),
     ...type.meta,
@@ -350,7 +354,8 @@ export default function Table(props) {
   const thClass = c(thCast + " pad");
 
   const headEl = (detailPanel ? [<th key="expand"></th>] : []).concat(
-    Object.keys(columns).map(key => (
+    // TODO support recursive type columns aka "robot.name"
+    columns.map(key => (
       <th key={key} className={thClass}>{ upMeta.t(type.types[key].title) }</th>
     ))
   );
@@ -393,7 +398,8 @@ export default function Table(props) {
 Table.Toolbar = DefaultToolbar;
 
 Table.propTypes = {
-  columns: PropTypes.object,
+  columns: PropTypes.array,
+  filters: PropTypes.array,
   data: PropTypes.array,
   options: PropTypes.object,
   icons: PropTypes.object,

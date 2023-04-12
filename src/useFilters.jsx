@@ -1,30 +1,5 @@
 import React, { useState, useMemo } from "react";
 
-function getFilterColumnsEx(ret, type, columns, prefix = "") {
-  if (columns.filter)
-    ret.push(prefix.substring(1));
-
-  if (!type.types && !type.SubType)
-    return;
-
-  const subType = type.SubType ? new type.SubType("dummy", {}, ...type.subTypeArgs) : null;
-  const getType = type.types ? key => type.types[key] : () => subType;
-
-  for (const [key, column] of Object.entries(columns)) {
-    if (!column)
-      continue;
-
-    const type = getType(key);
-    getFilterColumnsEx(ret, type, column, prefix + "." + key);
-  }
-}
-
-function getFilterColumns(type, columns) {
-  let ret = [];
-  getFilterColumnsEx(ret, type, columns);
-  return ret;
-}
-
 // creds to Pedro Cristóvão.
 function keyedFilter(type, filterColumns) {
   const ans = {};
@@ -37,64 +12,102 @@ function keyedFilter(type, filterColumns) {
   return ans;
 }
 
-function isIncluded(type, columns, filters, item) {
-  // console.log("isIncluded", type, columns, filters, item);
+function isIncluded(type, filters, item) {
+  // console.log("isIncluded", type, filters, item);
   if (!type.types)
     return type.filter(item, filters);
 
-  for (const key of Object.keys(filters)) {
-    const column = columns[key];
-    if (!column || typeof column === "boolean")
-      continue;
-
-    const subType = type.types[key];
-    if (!isIncluded(subType, column, filters[key], item[key]))
+  for (const [key, filter] of Object.entries(filters))
+    if (!isIncluded(type.types[key], filter, item[key]))
       return false;
-  }
 
   return true;
 }
 
-function _getFiltersEl(res, superType, type, data, filters, setFilters, dependencies, prefix = "") {
-  for (const [key, filter] of Object.entries(filters)) {
-    const subType = type.types[key];
+function _getFiltersEl(res, superType, type, data, config, filters, setFilters, dependencies, prefix = "") {
+  // console.log("_getFiltersEl", superType.title, type.title, config, filters, prefix);
+  for (const con of config) {
+    switch (typeof con) {
+    case "string": break;
+    case "object":
+      if (con.filters) {
+        let deepRes = [];
+        _getFiltersEl(deepRes, superType, type, data, con.filters, filters, setFilters, dependencies, prefix);
+        res.push(<div className={con.className}>{ deepRes }</div>);
+      } else
+        res.push(con);
+      continue;
+    default:
+      throw new Error("@tty-pt/types/useFilters: Unsupported filter type");
+    }
 
-    const fullKey = (prefix ? prefix + "." : "") + key;
+    const [headDot, ...tailDots] = con.split(".");
 
-    if (subType.types)
-      _getFiltersEl(res, superType, subType, data, filter, (newValue, subKey) => setFilters({
+    const subType = type.types[headDot];
+
+    if (!subType)
+      throw new Error("@tty-pt/types/useFilters: No such subType");
+
+    const fullKey = (prefix ? prefix + "." : "") + headDot;
+    const filter = filters[headDot];
+
+    if (subType.types && tailDots.length) {
+      _getFiltersEl(res, superType, subType, data, [tailDots.join(".")], filter, (newValue, subKey) => setFilters({
         ...filter,
         [subKey]: newValue,
-      }, key), dependencies, fullKey);
+      }, headDot), dependencies, fullKey);
 
-    else res.push(<subType.Filter
+      continue;
+    }
+
+    res.push(<subType.Filter
       key={"filter" + fullKey.replace(".", "-")}
       dataKey={fullKey}
       data={data}
       type={subType}
       superType={superType}
       value={filter}
-      onChange={value => setFilters(value, key)}
+      onChange={value => setFilters(value, headDot)}
     />);
   }
 }
 
-function getFiltersEl(type, data, filters, setFilters, dependencies) {
+function getFiltersEl(type, data, config, filters, setFilters, dependencies) {
   if (!data)
     return [];
   let res = [];
-  _getFiltersEl(res, type, type, data, filters, (value, key) => setFilters({
+  _getFiltersEl(res, type, type, data, config, filters, (value, key) => setFilters({
     ...filters,
     [key]: value,
   }), dependencies);
   return res;
 }
 
-export default function useFilters({ data, type, columns, dependencies }) {
-  const filterColumns = useMemo(() => getFilterColumns(type, columns), [columns]);
-  const [ filters, setFilters ] =  useState(keyedFilter(type, filterColumns));
-  const filtersEl = useMemo(() => getFiltersEl(type, data, filters, setFilters, dependencies), [data, filters]);
-  const filteredData = useMemo(() => data ? data.filter(item => isIncluded(type, columns, filters, item)) : [], [data, filters, columns]);
+function _flattenConfig(ret, config) {
+  for (const con of config) {
+    switch (typeof con) {
+    case "string":
+      ret.push(con);
+      break;
+    case "object":
+      if (ret.filters)
+        _flattenConfig(ret, ret.filters);
+      break;
+    }
+  }
+}
+
+function flattenConfig(config) {
+  const ret = [];
+  _flattenConfig(ret, config);
+  return ret;
+}
+
+export default function useFilters({ data, type, config, dependencies }) {
+  const flatConfig = useMemo(() => flattenConfig(config), [config]);
+  const [ filters, setFilters ] =  useState(keyedFilter(type, flatConfig));
+  const filtersEl = useMemo(() => getFiltersEl(type, data, config, filters, setFilters, dependencies), [data, config, filters]);
+  const filteredData = useMemo(() => data ? data.filter(item => isIncluded(type, filters, item)) : [], [data, filters]);
   // console.log("useFilters", filterColumns, filters);
 
   if (!data)
