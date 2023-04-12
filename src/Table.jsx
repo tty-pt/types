@@ -23,29 +23,22 @@ export function titleCamelCase(camelCase) {
 }
 
 function Details(props) {
-  const { rowData, type, details, config, index, meta: detailsMeta, dependencies } = props;
-
-  const c = useCast(dependencies?.MagicContext ?? MagicContext);
-
   const {
-    titleFormat = title => title + ": ",
-    containerCast = defaultContainerCast,
-    invalidCast = defaultInvalidCast,
-    titleCast = defaultTitleCast,
-    headerCast = defaultHeaderCast,
-    tableCast = defaultTableCast,
-    detailCast = defaultDetailCast,
-    Tooltip = MaybeTip,
-    renderValue,
-    table,
-  } = config;
+    rowData, type, details, cast = {}, index,
+    meta: detailsMeta, dependencies,
+    titleFormat = title => title + ": ", renderValue,
+    components = {}, table,
+  } = props;
 
-  const realContainerCast = containerCast + (tableCast ? " " + tableCast : "");
-  const containerClass = c(realContainerCast);
-  const headerClass = c(headerCast);
-  const titleClass = c(titleCast);
-  const invalidClass = c(invalidCast);
-  const detailClass = c(detailCast);
+  const { Tooltip = MaybeTip } = components;
+  const c = useCast(dependencies?.MagicContext ?? MagicContext);
+  const tableCast = cast.table ?? defaultTableCast;
+  const containerCast = (cast.container ?? defaultContainerCast) + (tableCast ? " " + tableCast : "");
+  const containerClass = c(containerCast);
+  const headerClass = c(cast.header ?? defaultHeaderCast);
+  const titleClass = c(cast.title ?? defaultTitleCast);
+  const invalidClass = c(cast.invalid ?? defaultInvalidCast);
+  const detailClass = c(cast.detail ?? defaultDetailCast);
 
   const maybeTableMap = {
     [true]: (field, value, pType, subType, meta) => {
@@ -197,15 +190,20 @@ Details.propTypes = {
   config: PropTypes.object,
   index: MyPropTypes.integer.isRequired,
   dependencies: PropTypes.object,
+  cast: PropTypes.object,
+  titleFormat: PropTypes.func,
+  renderValue: PropTypes.bool,
+  table: PropTypes.bool,
+  components: PropTypes.object,
 };
 
 function DetailsPanel(props) {
   const {
     details = [], type, rowData = {},
-    config = {}, index, meta, dependencies,
+    index, meta, dependencies, components,
+    titleFormat, renderValue, cast = {}, table,
   } = props;
   const c = useCast(dependencies?.MagicContext ?? MagicContext);
-  const { detailsCast = defaultDetailsCast } = config;
 
   function renderDetails(key, rowData, details) {
     return (<Details
@@ -213,28 +211,36 @@ function DetailsPanel(props) {
       details={details}
       rowData={rowData}
       type={type}
-      config={config}
       index={index}
       meta={meta}
+      components={components}
       dependencies={dependencies}
+      titleFormat={titleFormat}
+      renderValue={renderValue}
+      cast={cast}
+      table={table}
     />);
   }
 
-  return (<div className={c(detailsCast)}>
+  return (<div className={c(cast.details ?? defaultDetailsCast)}>
     { details.map((detail, idx) => renderDetails(idx, rowData, detail)) }
   </div>);
 }
 
 DetailsPanel.propTypes = {
   details: PropTypes.array.isRequired,
+  components: PropTypes.object,
+  titleFormat: PropTypes.func,
+  renderValue: PropTypes.bool,
   rowData: PropTypes.object.isRequired,
-  config: PropTypes.object,
   meta: PropTypes.shape({
     t: PropTypes.func.isRequired,
   }),
   type: PropTypes.any.isRequired,
   index: MyPropTypes.integer.isRequired,
   dependencies: PropTypes.object,
+  cast: PropTypes.object,
+  table: PropTypes.bool,
 };
 
 function Line(props) {
@@ -326,9 +332,11 @@ export default function Table(props) {
   const {
     title = "", name = "table", data, type,
     columns = [], filters = [], details = [],
-    options = {}, icons, t, dependencies,
+    icons, components = {}, t, cast = {}, dependencies,
+    renderValue, titleFormat, detailsTable,
   } = props;
-  const { components = {}, typedDetails = {}, thCast = defaultThCast, tableCast = defaultTableCast } = options;
+  const thCast = cast.th ?? defaultThCast;
+  const tableCast = cast.table ?? defaultTableCast;
   const { Toolbar = DefaultToolbar } = components;
   const { filtersEl, filteredData } = useFilters({ data, type, config: filters, dependencies });
   const upMeta = {
@@ -343,11 +351,15 @@ export default function Table(props) {
     return (<DetailsPanel
       details={details}
       type={type}
-      config={typedDetails}
       rowData={rowData}
       index={index}
       meta={upMeta}
       dependencies={dependencies}
+      components={components}
+      cast={cast.details}
+      titleFormat={titleFormat}
+      renderValue={renderValue}
+      table={detailsTable}
     />);
   } : null;
 
@@ -401,7 +413,6 @@ Table.propTypes = {
   columns: PropTypes.array,
   filters: PropTypes.array,
   data: PropTypes.array,
-  options: PropTypes.object,
   icons: PropTypes.object,
   details: PropTypes.array,
   t: PropTypes.func,
@@ -409,4 +420,9 @@ Table.propTypes = {
   title: PropTypes.string,
   name: PropTypes.string,
   dependencies: PropTypes.object,
+  components: PropTypes.object,
+  cast: PropTypes.object,
+  renderValue: PropTypes.bool,
+  titleFormat: PropTypes.func,
+  detailsTable: PropTypes.bool,
 };
