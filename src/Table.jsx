@@ -377,7 +377,7 @@ export default function Table(props) {
   ));
 
   return (<>
-    <Toolbar title={title}>
+    <Toolbar title={title} data={data}>
       { filtersEl }
     </Toolbar>
 

@@ -1,6 +1,6 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.0.4-88",
+  "version": "0.0.4-89",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "build/main.js",
   "scripts": {
