@@ -4,10 +4,10 @@ import { useCast, MagicContext } from "@tty-pt/styles";
 import useFilters from "./useFilters";
 
 const List = React.forwardRef((props, ref) => {
-  const { data, type, columns = {}, Component, style, dependencies, ...rest } = props;
+  const { data, type, filters = [], Component, style, dependencies, ...rest } = props;
   const c = useCast(dependencies?.MagicContext ?? MagicContext);
 
-  const { filtersEl, filteredData } = useFilters({ data, type, columns, dependencies });
+  const { filtersEl, filteredData } = useFilters({ data, type, config: filters, dependencies });
 
   const componentsEl = filteredData.map((item, index) => {
     return (<Component
@@ -33,7 +33,7 @@ List.propTypes = {
   data: PropTypes.array,
   style: PropTypes.object.isRequired,
   type: PropTypes.any.isRequired,
-  columns: PropTypes.object,
+  filters: PropTypes.array,
   onClick: PropTypes.object.isRequired,
   Component: PropTypes.elementType,
   dependencies: PropTypes.object,
