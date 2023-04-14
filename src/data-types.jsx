@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Tooltip, Button, Paper, IconButton, InputBase, Chip, TextField, Checkbox as CheckboxComponent, MenuItem } from "@material-ui/core";
-import SearchIcon from "@material-ui/icons/Search";
+import { Tooltip, Button, Paper, Chip, TextField, Checkbox as CheckboxComponent, MenuItem } from "@material-ui/core";
 import CancelIcon from "@material-ui/icons/Cancel";
 import { useCast, MagicContext } from "@tty-pt/styles";
 import { mapCount } from "./utils";
 import { Percent as PercentComponent } from "./Percent";
 import { Enum as EnumComponent } from "./Enum";
+import { StringFilter } from "./StringFilter";
 
 export
 const defaultMeta = {
@@ -16,6 +16,7 @@ const defaultMeta = {
     Icon: CancelIcon,
   },
   naTooltip: "Not Available",
+  t: a => a,
 };
 
 export
@@ -90,23 +91,8 @@ FHCenter.propTypes = {
 };
 
 function TextFilter(props) {
-  const { dataKey, type, value, onChange, dependencies } = props;
-  const c = useCast(dependencies?.MagicContext ?? MagicContext);
-
-  return (
-    <Paper data-testid={"filter-" + dataKey} className={c("horizontal0")}>
-      <IconButton aria-label={type.title}>
-        <SearchIcon />
-      </IconButton>
-
-      <InputBase
-        value={value}
-        placeholder={type.title}
-        inputProps={{ "aria-label": type.title }}
-        onChange={e => onChange(e.target.value)}
-      />
-    </Paper>
-  );
+  const { type, ...rest} = props;
+  return <StringFilter title={type.title} { ...rest } />;
 }
 
 TextFilter.propTypes = {

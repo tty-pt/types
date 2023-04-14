@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { StringFilter } from "./StringFilter";
 
 // creds to Pedro Cristóvão.
 function keyedFilter(type, filterColumns) {
@@ -12,16 +13,34 @@ function keyedFilter(type, filterColumns) {
   return ans;
 }
 
-function isIncluded(type, filters, item) {
-  // console.log("isIncluded", type, filters, item);
+function includes(type, filters, item) {
+  // console.log("includes", type, filters, item);
   if (!type.types)
     return type.filter(item, filters);
 
   for (const [key, filter] of Object.entries(filters))
-    if (!isIncluded(type.types[key], filter, item[key]))
+    if (key === "global")
+      continue;
+
+  else if (!includes(type.types[key], filter, item[key]))
       return false;
 
   return true;
+}
+
+function globalIncludes(globalFilter, type, filters, item) {
+  if (!type.types)
+    return globalFilter(type, item, filters);
+
+  for (const [key, subType] of Object.entries(type.types))
+    if (globalIncludes(globalFilter, subType, filters, item[key]))
+      return true;
+
+  return false;
+}
+
+function defaultGlobalFilter(type, item, filters) {
+  return type.format(item).substring(0, filters.global.length) === filters.global;
 }
 
 function _getFiltersEl(res, superType, type, data, config, filters, setFilters, dependencies, prefix = "") {
@@ -103,12 +122,24 @@ function flattenConfig(config) {
   return ret;
 }
 
-export default function useFilters({ data, type, config, dependencies }) {
+function DefaultGlobalComponent(props) {
+  return <StringFilter title="Multiple fields" { ...props } />;
+}
+
+export default function useFilters({ data, type, config, dependencies, global }) {
   const flatConfig = useMemo(() => flattenConfig(config), [config]);
   const [ filters, setFilters ] =  useState(keyedFilter(type, flatConfig));
-  const filtersEl = useMemo(() => getFiltersEl(type, data, config, filters, setFilters, dependencies), [data, config, filters]);
-  const filteredData = useMemo(() => data ? data.filter(item => isIncluded(type, filters, item)) : [], [data, filters]);
-  // console.log("useFilters", filterColumns, filters);
+  const {
+    filter: globalFilter = defaultGlobalFilter,
+    Component: GlobalComponent = DefaultGlobalComponent,
+  } = global ?? {};
+  const filtersEl = useMemo(() => (global ? [(
+    <GlobalComponent
+      key="filter-global" dataKey="global" data={data} type={type} superType={type}
+      onChange={value => setFilters({ ...filters, global: value })}
+    />
+  )] : []).concat(getFiltersEl(type, data, config, filters, setFilters, dependencies)), [data, config, filters]);
+  const filteredData = useMemo(() => data ? data.filter(item => includes(type, filters, item) && (!global || !filters.global || globalIncludes(globalFilter, type, filters, item))) : [], [data, filters]);
 
   if (!data)
     return {
