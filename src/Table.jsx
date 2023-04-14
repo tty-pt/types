@@ -333,12 +333,12 @@ export default function Table(props) {
     title = "", name = "table", data, type,
     columns = [], filters = [], details = [],
     icons, components = {}, t, cast = {}, dependencies,
-    renderValue, titleFormat, detailsTable,
+    renderValue, titleFormat, detailsTable, global,
   } = props;
   const thCast = cast.th ?? defaultThCast;
   const tableCast = cast.table ?? defaultTableCast;
   const { Toolbar = DefaultToolbar } = components;
-  const { filtersEl, filteredData } = useFilters({ data, type, config: filters, dependencies });
+  const { filtersEl, filteredData } = useFilters({ data, type, config: filters, dependencies, global });
   const upMeta = {
     t: t ?? (a => a),
     ...type.meta,
@@ -425,4 +425,5 @@ Table.propTypes = {
   renderValue: PropTypes.bool,
   titleFormat: PropTypes.func,
   detailsTable: PropTypes.bool,
+  global: PropTypes.object,
 };
