@@ -368,7 +368,7 @@ const Filters = (string | { filters: Filters, className: string } | React.Elemen
 So, it is an array. It can be an array of strings, Elements or that option in the middle. Aka:
 
 ```typescript
-const BoxFilters { filters: Filters, className: string };
+const BoxFilters = { filters: Filters, className: string };
 ```
 
 If it is in this format, well it has a sort of recursive behavior in which you can specify the layout a bit better to account for a couple of situations.
