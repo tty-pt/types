@@ -23,6 +23,7 @@ import InnerTooltipCircle from "./TooltipCircle";
 import InnerTable from "./Table";
 import InnerList from "./List";
 import InnerIconButton from "./IconButton";
+export { StringFilter } from "./StringFilter";
 export { useMeta, withMeta } from "./useMeta";
 // export { Enum } from "./Enum";
 // export { Percent } from "./Percent";
