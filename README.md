@@ -1,13 +1,13 @@
 # @tty-pt/types
 > Automatic fetching and displaying of data through declarative data types.
 
-This library is indended to facilitate displaying data on simple components by having a model of your data.
-With this model, a lot of things can be automated, like for example displaying data or maybe even getting
-automatic mock data (future feature) and also the fetching of the data (current feature).
-It has two React components we can use to display this "typed" data: A "Table" and a "List".
-A "Table" inspired in the interface of "material-table", with some changes.
-And a "List" is just like a list of cards or custom components.
-In fact you can use data fetched with a "MetaHandler" everywhere.
+This library is indended to facilitate displaying data on simple components by
+having a model of your data.
+
+It can save you A lot of coding in you application!
+
+With it, you can easily grab data from a "MetaHandler" from whatever sources,
+and use it anywhere with the same API (agnostic to how you fetch the data).
 
 # Installation
 ```sh
@@ -15,6 +15,8 @@ npm i --save-dev @tty-pt/types
 ```
 
 # Simple Example
+
+Here, we don't use a MetaHandler, just some other features of types, to display a simple table:
 ```jsx
 import { String, Table } from "@tty-pt/types"
 
@@ -54,7 +56,6 @@ const STATE_MAP = {
 const incomingType = new RecurseBool("Actor", {}, {
 	name: new String("Name"),
 	state: new Enum("State", {
-		if: (_, data) => data.shouldReadState, // as long as this is true
 		default: STATE.good, // data will be set to this, even if it is not received
 		getter: (_, data) => data.deeper.state
 	}, STATE, STATE_MAP);
@@ -70,9 +71,16 @@ class ExampleMetaHandler extends MetaHandler {
 	}
 }
 
+function createHandler(type, options = {}) {
+	return new MetaHandler(type, options.dependencies.fetcher, options.dependencies.indexer, options);
+}
+
+
+// most of the above could easily be in other files and be shared across views
+
 // if you had a different outcoming type from the incoming type,
 // you would provide an "adapter" to map the data to the options argument
-const tableHandler = new ExampleMetaHandler(incomingType, { dependencies });
+const tableHandler = createHandler(incomingType, { dependencies });
 const outgoingType = incomingType;
 
 function App() {
@@ -262,3 +270,105 @@ You can also do the following signature to easily extend one of these classes:
 ```js
 export const Status = Bool.extend(BOOL_STATUS_MAP);
 ```
+
+# Component API
+> To simplify specifying the props of the components, we will use typescript as pseudo-code.
+
+## Table
+```typescript
+// I will explain the following line a bit later, if you don't mind.
+const Filters = (string | { filters: Filters, className: string } | React.ElementType)[];
+
+interface TooltipProps {
+	tooltip: string;
+	children: React.Node;
+	className: string;
+}
+
+// this isn't necessary in most circustances, it is just nice to have.
+interface Dependencies {
+	MagicContext?: MagicContext; // @tty-pt/styles. FIXME format
+}
+
+interface GlobalFilterProps {
+	value: any;
+	dataKey: string; // TODO rename to typeKey
+	onChange: any => void; // TODO fix return type
+	dependencies?: Dependencies;
+}
+
+interface TableProps {
+	columns: string[]; /* here you can specify paths to things that will be displayed,
+		 	    * for example robot.name. This is similar to what you can give
+			    * as filters. You can also give strings like these to filters.
+			    */
+	filters: Filters; // Sorry, please wait a bit more for a full explanation.
+	data: object[]; // Simply the data that is received for example from a MetaHandler.
+	icons: { // mui icons or similar
+		DetailPanel: React.Component; // expand icon (FIXME)
+	};
+	details?: string[][]; // these can only be simple words for now (FIXME)
+	t?: string => string; // translate functionality
+	type: RecurseBool;
+	title?: string;
+	name?: string; // used for identifying which inputs belong to this table, in case the table has inputs.
+	dependencies?: Dependencies;
+	components?: {
+		Tooltip?: React.Component<TooltipProps>; // Custom Tooltip for detail headers
+	};
+	cast?: {
+		th?: string; // spell for th elements of the main table
+		table?: string; // spell for the main table component
+		details?: {
+			container?: string; // spell for the box of recursive-type elements.
+			header?: string; // spell for be applied to the header of the type (not the body of recursive-types).
+			title?: string; // spell for the title part of the header element
+			invalid?: string; // spell for invalid data to be presented in the formatted string of the type.
+			detail?: string; // spell to be applied to the main (biggest) component of the details.
+		};
+	};
+	renderValue?: Boolean; // do you wish to render icons for enums, etc?
+	titleFormat?: string => string; // you can change how titles are displayed here
+	detailsTable?: Boolean; // do you wish to try to show details as sub-tables?
+	global?: { // provide this to specify that you want some sort of global filtering
+		filter?: (type: BaseType, item: object, filters: object) => Boolean;
+		Component?: React.Component<GlobalFilterProps>;
+	};
+}
+```
+
+## List
+Well this is just to display a list of components. It has no special use other than filtering. The API may change.
+
+```typescript
+interface ListItemProps {
+	index: Number;
+	data: object;
+}
+
+interface ListProps {
+	data: object[];
+	style: object;
+	type: RecurseBool;
+	filters: Filters; // just a bit more...
+	onClick: object; // FIXME
+	Component: React.Component<ListItemProps>;
+	dependencies: Dependencies;
+	[key: string]?: any;
+}
+```
+
+# Filters
+Filters, as previously stated, has a format like the following:
+
+```typescript
+const Filters = (string | { filters: Filters, className: string } | React.ElementType)[];
+```
+
+So, it is an array. It can be an array of strings, Elements or that option in the middle. Aka:
+
+```typescript
+const BoxFilters = { filters: Filters, className: string };
+```
+
+If it is in this format, well it has a sort of recursive behavior in which you can specify the layout a bit better to account for a couple of situations.

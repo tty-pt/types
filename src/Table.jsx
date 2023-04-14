@@ -7,13 +7,13 @@ import { useCast, MagicContext } from "@tty-pt/styles";
 import useFilters from "./useFilters";
 import IconButton from "./IconButton";
 
-const defaultContainerCast = "marginLeftSmall borderTopDivider";
+const defaultTableCast = "tableLayoutFixed sizeHorizontalFull";
+const defaultContainerCast = "marginLeftSmall borderTopDivider " + defaultTableCast;
 const defaultHeaderCast = "horizontalSmall alignItemsCenter";
 const defaultInvalidCast = "colorErrorLight";
 const defaultTitleCast = "fontWeightBold";
 const defaultDetailsCast = "pad horizontal flexWrap flexGrowChildren";
-const defaultTableCast = "tableLayoutFixed sizeHorizontalFull";
-const defaultDetailCast = "overflowHidden";
+const defaultDetailCast = "overflowHidden " + defaultTableCast;
 const lineCast = "borderTopDivider";
 const defaultThCast = "textOverflowEllipsis overflowHidden";
 
@@ -32,9 +32,7 @@ function Details(props) {
 
   const { Tooltip = MaybeTip } = components;
   const c = useCast(dependencies?.MagicContext ?? MagicContext);
-  const tableCast = cast.table ?? defaultTableCast;
-  const containerCast = (cast.container ?? defaultContainerCast) + (tableCast ? " " + tableCast : "");
-  const containerClass = c(containerCast);
+  const containerClass = c(cast.container ?? defaultContainerCast);
   const headerClass = c(cast.header ?? defaultHeaderCast);
   const titleClass = c(cast.title ?? defaultTitleCast);
   const invalidClass = c(cast.invalid ?? defaultInvalidCast);
@@ -103,7 +101,7 @@ function Details(props) {
       const upMeta = { ...meta, ...pType.meta };
 
       function renderRecurse(getSubInstance) {
-        return (<div className={c(containerCast)} key={field + "-children"}>
+        return (<div className={containerClass} key={field + "-children"}>
           {
             Object.keys(value)
               .map(key => mapDetails(key, value[key], subType, getSubInstance(key), upMeta))
@@ -171,7 +169,7 @@ function Details(props) {
   const detailsEl = details.map(key => mapDetails(key, rowData[key], type, type.types[key], detailsMeta));
 
   if (table)
-    return (<table className={c(tableCast)}>
+    return (<table className={detailClass}>
       <tbody>
         { detailsEl }
       </tbody>
