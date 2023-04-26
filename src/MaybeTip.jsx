@@ -1,11 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Tooltip from "@material-ui/core/Tooltip";
-import { useCast, MagicContext } from "@tty-pt/styles";
+import Tooltip from "@mui/material/Tooltip";
 
 export default function MaybeTip(props) {
-  const { tooltip, children, dependencies } = props;
-  const c = useCast(dependencies?.MagicContext ?? MagicContext);
+  const { tooltip, children } = props;
 
   const tooltipEl = tooltip ? tooltip.split("\n").map((line, idx) => (
     <div key={idx}>{line}</div>
@@ -13,9 +11,9 @@ export default function MaybeTip(props) {
 
   return tooltipEl ? (
     <Tooltip title={tooltipEl}>
-      <span className={c("horizontal0 alignItemsCenter")}>
+      <span className="horizontal-0 align-items">
         <span>{ children }</span>
-        <mark className={c("colorInherit fontWeightBold backgroundInherit")}>*</mark>
+        <mark className="color font-weight background">*</mark>
       </span>
     </Tooltip>
   ) : children;
@@ -24,5 +22,4 @@ export default function MaybeTip(props) {
 MaybeTip.propTypes = {
   tooltip: PropTypes.string,
   children: PropTypes.node,
-  dependencies: PropTypes.object,
 };
