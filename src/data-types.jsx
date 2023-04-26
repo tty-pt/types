@@ -470,7 +470,7 @@ export class Checkbox extends Bool {
   }
 
   read(value) {
-    return value;
+    return !super.read(value);
   }
 
   renderValue(value, index, key) {
