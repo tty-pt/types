@@ -1,13 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useCast, MagicContext } from "@tty-pt/styles";
 import useFilters from "./useFilters";
 
 const List = React.forwardRef((props, ref) => {
-  const { data, type, filters = [], Component, style, dependencies, ...rest } = props;
-  const c = useCast(dependencies?.MagicContext ?? MagicContext);
-
-  const { filtersEl, filteredData } = useFilters({ data, type, config: filters, dependencies });
+  const { data, type, filters = [], Component, style, ...rest } = props;
+  const { filtersEl, filteredData } = useFilters({ data, type, config: filters });
 
   const componentsEl = filteredData.map((item, index) => {
     return (<Component
@@ -18,8 +15,8 @@ const List = React.forwardRef((props, ref) => {
     />);
   });
 
-  return (<div ref={ref} style={style} className={c("vertical overflowAuto")}>
-    <div className={c("horizontal flexWrap alignItemsCenter justifyContentEnd")}>
+  return (<div ref={ref} style={style} className="vertical overflow-auto">
+    <div className="horizontal flex-wrap align-items-center justify-content-end">
       { filtersEl }
     </div>
 

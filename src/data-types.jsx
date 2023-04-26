@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Tooltip, Button, Paper, Chip, TextField, Checkbox as CheckboxComponent, MenuItem } from "@material-ui/core";
+import { Tooltip, Button, Chip, TextField, Checkbox as CheckboxComponent, MenuItem } from "@material-ui/core";
 import CancelIcon from "@material-ui/icons/Cancel";
-import { useCast, MagicContext } from "@tty-pt/styles";
 import { mapCount } from "./utils";
 import { Percent as PercentComponent } from "./Percent";
 import { Enum as EnumComponent } from "./Enum";
@@ -65,29 +64,23 @@ function delKey(object, key) {
 }
 
 function TextCenter(props) {
-  const { children, dependencies } = props;
-  const c = useCast(dependencies?.MagicContext ?? MagicContext);
-
-  return <div className={c("textAlignCenter")}>{children}</div>;
+  const { children } = props;
+  return <div className="text-align">{children}</div>;
 }
 
 TextCenter.propTypes = {
   children: PropTypes.node,
-  dependencies: PropTypes.object,
 };
 
 function FHCenter(props) {
-  const { children, dependencies } = props;
-  const c = useCast(dependencies?.MagicContext ?? MagicContext);
-
-  return (<div className={c("horizontal0 justifyContentCenter")}>
+  const { children } = props;
+  return (<div className="horizontal-0 justify-content">
     { children }
   </div>);
 }
 
 FHCenter.propTypes = {
   children: PropTypes.node,
-  dependencies: PropTypes.object,
 };
 
 function TextFilter(props) {
@@ -100,18 +93,16 @@ TextFilter.propTypes = {
   value: PropTypes.string,
   dataKey: PropTypes.string,
   onChange: PropTypes.func,
-  dependencies: PropTypes.object,
 };
 
 export
 function Filter(props) {
-  const { chipKey, label, active, value, dependencies, ...rest } = props;
-  const c = useCast(dependencies?.MagicContext ?? MagicContext);
+  const { chipKey, label, active, value, ...rest } = props;
 
   return (<Chip
     data-testid={"chip-" + chipKey}
     label={`${label} (${value})`}
-    className={c(active ? "chipActive" : "chip")}
+    className={active ? "chip-active" : "chip"}
     { ...rest }
   />);
 }
@@ -121,7 +112,6 @@ Filter.propTypes = {
   chipKey: PropTypes.string,
   value: PropTypes.any,
   active: PropTypes.bool,
-  dependencies: PropTypes.object,
 };
 
 export class Integer {
@@ -150,7 +140,6 @@ export class Integer {
 
   renderColumn(value, index, key, meta) {
     return <TextCenter
-      dependencies={meta.dependencies}
       data-testid={"column-" + key}
     >
       {this.renderValue(value, index, key, meta)}
@@ -232,7 +221,6 @@ export class Component extends String {
 
   renderColumn(value, index, key, meta) {
     return <FHCenter
-      dependencies={meta.dependencies}
       data-testid={"column-" + key}
     >
       { this.renderValue(value, index, key, meta) }
@@ -319,8 +307,7 @@ export class Enum extends Component {
   }
 
   Filter(props) {
-    const { type, superType, value, onChange, dataKey, data, dependencies } = props;
-    const c = useCast(dependencies?.MagicContext ?? MagicContext);
+    const { type, superType, value, onChange, dataKey, data } = props;
     const numbers = mapCount(superType, data, dataKey);
 
     const filtersEl = Object.values(type.declaration).map(key => {
@@ -334,14 +321,11 @@ export class Enum extends Component {
           ...(value ?? {}),
           [key]: true,
         })}
-        dependencies={dependencies}
       />);
     });
 
-    // <div>{type.title}</div>
-    // <div className={c("horizontal0 flexWrap")}>{ filtersEl }</div>
     return (
-      <div data-testid={"filter-" + dataKey} className={c("horizontalSmall alignItemsCenter justifyContentSpaceBetween flexWrap")}>
+      <div data-testid={"filter-" + dataKey} className="horizontal-small align-items-center justify-content-space-between flex-wrap">
         { filtersEl }
       </div>
     );
@@ -782,10 +766,9 @@ export class DateTime extends String {
   }
 
   Filter(props) {
-    const { dataKey, type, value, onChange, dependencies } = props;
-    const c = useCast(dependencies?.MagicContext ?? MagicContext);
+    const { dataKey, type, value, onChange } = props;
 
-    return (<Paper data-testid={"filter-" + dataKey} className={c("padSmall verticalSmall")}>
+    return (<div data-testid={"filter-" + dataKey} className="paper pad-small vertical-small">
       <TextField
         label={"Start " + type.title}
         type="datetime-local"
@@ -810,7 +793,7 @@ export class DateTime extends String {
           shrink: true,
         }}
       />
-    </Paper>);
+    </div>);
   }
 
   preprocess(data, meta, parentKey) {
