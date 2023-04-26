@@ -18,12 +18,13 @@ function includes(type, filters, item) {
   if (!type.types)
     return type.filter(item, filters);
 
-  for (const [key, filter] of Object.entries(filters))
+  for (const [key, filter] of Object.entries(filters)) {
     if (key === "global")
       continue;
 
-  else if (!includes(type.types[key], filter, item[key]))
+    else if (!includes(type.types[key], filter, item[key]))
       return false;
+  }
 
   return true;
 }

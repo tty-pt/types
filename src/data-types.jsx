@@ -469,10 +469,6 @@ export class Checkbox extends Bool {
     super(title, meta, map);
   }
 
-  read(value) {
-    return value;
-  }
-
   renderValue(value, index, key) {
     return (<InnerCheckbox
       name={key}
