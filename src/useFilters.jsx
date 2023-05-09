@@ -52,7 +52,7 @@ function _getFiltersEl(res, superType, type, data, config, filters, setFilters, 
       if (con.filters) {
         let deepRes = [];
         _getFiltersEl(deepRes, superType, type, data, con.filters, filters, setFilters, prefix);
-        res.push(<div className={con.className}>{ deepRes }</div>);
+        res.push(<div key={prefix + " " + type.title} className={con.className}>{ deepRes }</div>);
       } else
         res.push(con);
       continue;

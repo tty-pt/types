@@ -2,13 +2,18 @@
   "name": "@tty-pt/types",
   "version": "0.1.2-alpha-0",
   "description": "Automate table and filter creation and other things and have your data models in the client",
-  "main": "./src/",
+  "main": "./dist/",
   "exports": {
     ".": {
-      "default": "./src/index.jsx"
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
-    "./*": "./src/*"
+    "./*": "./dist/*"
+  },
+  "@tty-pt/scripts": {
+    "entry": "./src/index.jsx",
+    "development": true,
+    "library": true
   },
   "scripts": {
     "test": "scripts test",

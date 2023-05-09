@@ -5,7 +5,7 @@ import MaybeTip from "./MaybeTip";
 import useFilters from "./useFilters";
 import IconButton from "./IconButton";
 
-const defaultTableClass = "table-layout size-horizontal-full";
+const defaultTableClass = "table-layout size-horizontal border-collapse";
 const defaultContainerClass = "margin-left-small border-top " + defaultTableClass;
 const defaultHeaderClass = "horizontal-small align-items";
 const defaultInvalidClass = "color-error-light";
