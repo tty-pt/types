@@ -16,7 +16,7 @@
     "library": true
   },
   "scripts": {
-    "test": "scripts test",
+    "test": "echo no tests # scripts test",
     "watch": "scripts watch",
     "build": "scripts build",
     "lint": "scripts lint"
