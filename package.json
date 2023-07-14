@@ -2,6 +2,7 @@
   "name": "@tty-pt/types",
   "version": "0.1.2-alpha-0",
   "description": "Automate table and filter creation and other things and have your data models in the client",
+  "type": "commonjs",
   "main": "./dist/",
   "exports": {
     ".": {
