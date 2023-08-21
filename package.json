@@ -1,6 +1,6 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.1.2-alpha-0",
+  "version": "0.1.3",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "type": "commonjs",
   "main": "./dist/",
@@ -42,10 +42,10 @@
   "devDependencies": {
     "@emotion/react": "^11.10.8",
     "@emotion/styled": "^11.10.8",
-    "@tty-pt/scripts": "workspace:^0.1.0-alpha-1",
+    "@tty-pt/scripts": "^0.1.4",
     "prop-types": "^15.8.1",
-    "react": "^18",
-    "react-dom": "^18.2.0"
+    "react": "^17.0.0 < 20.0.0",
+    "react-dom": "^17.0.0 < 20.0.0"
   },
   "peerDependencies": {
     "@emotion/react": "^11.10.8",
@@ -53,8 +53,8 @@
     "@mui/icons-material": "^5",
     "@mui/material": "^5",
     "prop-types": "^15.8.1",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0"
+    "react": "^17.0.0 < 20.0.0",
+    "react-dom": "^17.0.0 < 20.0.0"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"

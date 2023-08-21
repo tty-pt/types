@@ -1,5 +1,6 @@
 function removeDep(context, pkg, name, type = "peer") {
-	if (pkg[type + "Dependencies"][name]) {
+	const deps = pkg[type + "Dependencies"];
+	if (deps && deps[name]) {
 		context.log(`[${pkg.name}] Removing ${name} as a ${type} dependency (https://bit.ly/3jmD8J6).`);
 		delete pkg[type + "Dependencies"][name];
 	}
@@ -7,10 +8,10 @@ function removeDep(context, pkg, name, type = "peer") {
 
 const readPackage = (pkg, context) => {
 	const remove = removeDep.bind(null, context);
-	if (pkg.peerDependencies)
-		remove(pkg, "react");
-	if (pkg.devDependencies)
-		remove(pkg, "react", "dev");
+	remove(pkg, "react");
+	remove(pkg, "react-dom");
+	remove(pkg, "react", "dev");
+	remove(pkg, "react-dom", "dev");
 	return pkg;
 };
 
