@@ -5,8 +5,8 @@ import MyPropTypes from "./prop-types";
 
 export function Percent(props) {
   const { icons, level } = props;
-  const Icon = icons[Math.floor(level * icons.length / 100)];
-  return <Tooltip title={level + "%"}><Icon /></Tooltip>;
+  const Icon = icons[Math.floor(level * (icons.length - 1) / 100)];
+  return <Tooltip title={level.toFixed(2) + "%"}><Icon /></Tooltip>;
 }
 
 Percent.propTypes = {

@@ -6,7 +6,7 @@ import { defaultMeta } from "../data-types";
 import Circle from "./Circle";
 
 export default function TooltipCircle(props) {
-  const { value = defaultMeta.na, style, size = 12 } = props;
+  const { value = defaultMeta.na, style, size = 20 } = props;
 
   return (<Tooltip title={value.title}>
     <span className="vertical-0 justify-content" style={style}>
