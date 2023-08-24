@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Tooltip from "@mui/material/Tooltip";
+import Tooltip from "@material-ui/core/Tooltip";
 import MyPropTypes from "../prop-types";
 import { defaultMeta } from "../data-types";
 import Circle from "./Circle";
