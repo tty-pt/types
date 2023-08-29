@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/tty-pt/types#readme",
   "devDependencies": {
-    "@tty-pt/scripts": "^0.1.8",
+    "@tty-pt/scripts": "^0.1.6",
     "prop-types": "^15.8.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0"
