@@ -1,8 +1,8 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.0.10",
+  "version": "0.2.5",
   "description": "Automate table and filter creation and other things and have your data models in the client",
-  "main": "./dist/",
+  "main": "./dist/index.js",
   "exports": {
     ".": {
       "default": "./dist/index.js"
@@ -39,7 +39,10 @@
   },
   "homepage": "https://github.com/tty-pt/types#readme",
   "devDependencies": {
-    "@tty-pt/scripts": "^0.1.6",
+    "@babel/preset-env": "^7.23.2",
+    "@babel/preset-react": "^7.22.15",
+    "@babel/preset-typescript": "^7.22.15",
+    "@tty-pt/scripts": "^0.2.0",
     "prop-types": "^15.8.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0"

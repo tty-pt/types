@@ -23,8 +23,7 @@ export function titleCamelCase(camelCase) {
 function Details(props) {
   const {
     rowData, type, details, cast = {}, index, meta: detailsMeta,
-    titleFormat = title => title + ": ", renderValue,
-    components = {}, table,
+    titleFormat, renderValue, components = {}, table,
   } = props;
 
   const { Tooltip = MaybeTip } = components;
@@ -62,18 +61,22 @@ function Details(props) {
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */
         const { value, tooltip, children, cellClass } = props;
+        const Label = subType.Label;
 
         return (<>
           <tr key={field}>
             <td className={headerClass}>
-              { renderValue ? <span>{ subType.renderValue(value, index, field, upMeta) }</span> : null }
+              { renderValue ? <span>{ subType.renderValue(subType.read(value), index, field, upMeta) }</span> : null }
               <span className={titleClass}>
-                {
-                  titleFormat(meta.t(pType.SubType
-                    ? titleCamelCase(field)
-                    : subType.detailsTitle
-                  ))
-                }
+                <Tooltip tooltip={<div className="vertical-small flex text-align">
+                    <div className="font-size-14 pad-top-small">{ subType.constructor.name }</div>
+                    <Label self={subType} upMeta={upMeta} index={index} enumKey={field} titleClass={titleClass} invalidClass={invalidClass} />
+                </div>}>{
+                titleFormat(meta.t(pType.SubType
+                  ? titleCamelCase(field)
+                  : subType.detailsTitle
+                ))
+                }</Tooltip>
               </span>
             </td>
             <td className={cellClass}>
@@ -114,17 +117,21 @@ function Details(props) {
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */
         const { value, tooltip, children, cellClass } = props;
+        const Label = subType.Label;
 
         return (<>
           <div key={field} className={headerClass}>
-            { renderValue ? <span>{ subType.renderValue(value, index, field, upMeta) }</span> : null }
+            { renderValue ? <span>{ subType.renderValue(subType.read(value), index, field, upMeta) }</span> : null }
             <span className={titleClass}>
-              {
-                titleFormat(meta.t(pType.SubType
-                  ? titleCamelCase(field)
-                  : subType.detailsTitle
-                ))
-              }
+              <Tooltip tooltip={<div className="vertical-small flex text-align">
+                  <div className="font-size-14 pad-top-small">{ subType.constructor.name }</div>
+                  <Label self={subType} upMeta={upMeta} index={index} enumKey={field} titleClass={titleClass} invalidClass={invalidClass} />
+              </div>}>{
+              titleFormat(meta.t(pType.SubType
+                ? titleCamelCase(field)
+                : subType.detailsTitle
+              ))
+              }</Tooltip>
             </span>
             <span className={cellClass}>
               <Tooltip tooltip={tooltip}>{ children }</Tooltip>
@@ -148,7 +155,8 @@ function Details(props) {
   const boolTable = !!table;
 
   function mapDetails(field, value, type, subType, meta) {
-    const isInvalid = subType.invalid(value);
+    const read = subType.read(value, meta);
+    const isInvalid = subType.invalid(read);
     const cellClass = isInvalid ? invalidClass : "";
     const Component = maybeTableMap[boolTable](field, value, type, subType, meta);
 
@@ -158,7 +166,7 @@ function Details(props) {
       tooltip={subType.detailsTooltip(value, meta)}
       key={field}
     >
-      { subType.format(value, meta) }
+      { subType.format(read, meta) }
     </Component>);
   }
 
@@ -317,10 +325,13 @@ export default function Table(props) {
     title = "", name = "table", data, type,
     columns = [], filters = [], details = [],
     icons, components = {}, t, cast = {},
-    renderValue, titleFormat, detailsTable, global,
+    titleFormat = title => title + ": ",
+    renderValue, detailsTable, global,
   } = props;
   const thClass = cast.th ?? defaultThClass;
   const tableClass = cast.table ?? defaultTableClass;
+  const titleClass = cast.title ?? defaultTitleClass;
+  const invalidClass = cast.invalid ?? defaultInvalidClass;
   const { Toolbar = DefaultToolbar } = components;
   const { filtersEl, filteredData } = useFilters({ data, type, config: filters, global });
   const upMeta = {
@@ -345,11 +356,19 @@ export default function Table(props) {
     />);
   } : null;
 
+  const Tooltip = components?.Tooltip ?? MaybeTip;
+
   const headEl = (detailPanel ? [<th key="expand"></th>] : []).concat(
     // TODO support recursive type columns aka "robot.name"
-    columns.map(key => (
-      <th key={key} className={thClass}>{ upMeta.t(type.types[key].title) }</th>
-    ))
+    columns.map((key, index) => {
+      const Label = type.types[key].Label;
+      return (<th key={key} className={thClass}><Tooltip tooltip={<div className="vertical-small flex text-align">
+          <div className="font-size-14 pad-top-small">{ type.types[key].constructor.name }</div>
+          <Label self={type.types[key]} upMeta={upMeta} index={index} enumKey={key} titleClass={titleClass} invalidClass={invalidClass} />
+        </div>}>
+        { upMeta.t(type.types[key].title) }
+      </Tooltip></th>);
+    })
   );
 
   const LineComponent = detailPanel ? ExpandLine : Line;

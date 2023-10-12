@@ -5,15 +5,14 @@ import Tooltip from "@material-ui/core/Tooltip";
 export default function MaybeTip(props) {
   const { tooltip, children } = props;
 
-  const tooltipEl = tooltip ? tooltip.split("\n").map((line, idx) => (
+  const tooltipEl = tooltip ? typeof tooltip === "string" ? tooltip.split("\n").map((line, idx) => (
     <div key={idx}>{line}</div>
-  )) : null;
+  )) : tooltip : null;
 
   return tooltipEl ? (
     <Tooltip title={tooltipEl}>
       <span className="horizontal-0 align-items">
         <span>{ children }</span>
-        <mark className="color font-weight background">*</mark>
       </span>
     </Tooltip>
   ) : children;

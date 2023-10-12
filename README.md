@@ -18,10 +18,10 @@ npm i --save-dev @tty-pt/types
 
 Here, we don't use a MetaHandler, just some other features of types, to display a simple table:
 ```jsx
-import { String, Table } from "@tty-pt/types"
+import { Str, Table } from "@tty-pt/types"
 
 const type = new RecurseBool("Actor", {}, {
-	name: new String("Name"),
+	name: new Str("Name"),
 });
 
 export default function NameTable() {
@@ -37,7 +37,7 @@ export default function NameTable() {
 
 # Slightly More Advanced Example
 ```jsx
-import { String, RecurseBool, Enum, Bool } from "@tty-pt/types";
+import { Str, RecurseBool, Enum, Bool } from "@tty-pt/types";
 import { IconGood, IconBad, IconNeutral } from "example";
 import dependencies from "lib/dependencies";
 
@@ -54,7 +54,7 @@ const STATE_MAP = {
 };
 
 const incomingType = new RecurseBool("Actor", {}, {
-	name: new String("Name"),
+	name: new Str("Name"),
 	state: new Enum("State", {
 		default: STATE.good, // data will be set to this, even if it is not received
 		getter: (_, data) => data.deeper.state
@@ -140,14 +140,14 @@ These are some base types provided with this library. These types have a lot of 
 const type = new Integer("Age"); // or new Integer("Age", { default: 0 })
 ```
 
-## String
+## Str
 > A String
 ```js
-const type = new String("Name"); // or new String("Name", { default: "Joe" })
+const type = new Str("Name"); // or new Str("Name", { default: "Joe" })
 ```
 
 ## Component
-> Same as String but it is used for rendering components.
+> Same as Str but it is used for rendering components.
 This serves to provide generic functionality to many other types.
 
 ## Percent
@@ -183,7 +183,7 @@ const type = new Checkbox("Status", {}, map);
 > Like Bool but it has a notion of recursion. It has a map of sub-types.
 ```js
 const type = new RecurseBool("Human", {}, map, {
-	name: new String("Name"),
+	name: new Str("Name"),
 	age: new Integer("Age"),
 });
 ```
@@ -191,7 +191,7 @@ const type = new RecurseBool("Human", {}, map, {
 ## DictionaryOf
 > Like RecurseBool but it has a different notion of recursion. It has a map in which each key may correspond to a value of a certain type.
 ```js
-const type = new DictionaryOf("Names", {}, map, String, []);
+const type = new DictionaryOf("Names", {}, map, Str, []);
 ```
 Fourth argument is the SubType, and the fifth is the array of arguments provided to the SubType constructor.
 
@@ -261,7 +261,7 @@ Then you can use it like so:
 // file: src/views/Test.js
 import { DictionaryOf } from "../types";
 
-const type = new DictionaryOf("Names", {}, String, []);
+const type = new DictionaryOf("Names", {}, Str, []);
 
 /* ... */
 ```

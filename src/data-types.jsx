@@ -16,6 +16,7 @@ export
 const defaultMeta = {
   na: {
     title: "N/A",
+    value: "undefined",
     color: "-black",
     Icon: CancelIcon,
   },
@@ -29,7 +30,6 @@ function metaMix(a, b) {
   delete c.getter;
   delete c.subGetter;
   return { ...defaultMeta, ...c, ...b };
-  // return { ...a, ...b };
 }
 
 export
@@ -45,6 +45,7 @@ function extend(DefaultType, passArgs, options) {
     });
 
   Object.assign(Type.prototype, options);
+  Object.defineProperty(Type, 'name', { value: BaseType.name });
 
   return Type;
 }
@@ -156,7 +157,13 @@ export class Integer {
   }
 
   invalid(value) {
-    return value === undefined || this.read(value);
+    return value === undefined || value;
+  }
+
+  Label(props) {
+    const { upMeta, self } = props;
+    const meta = metaMix(upMeta, self.meta);
+    return <div>{ meta.t("No info") }</div>;
   }
 
   filter(value, filterValue) {
@@ -197,14 +204,14 @@ export class Integer {
   }
 }
 
-export class String extends Integer {
+export class Str extends Integer {
   constructor(title, meta) {
     super(title, meta);
     this.initialFilter = "";
   }
 
   invalid(value) {
-    return value === undefined || !this.read(value);
+    return value === undefined || !value;
   }
 
   filter(value, filterValue) {
@@ -218,7 +225,7 @@ export class String extends Integer {
   }
 }
 
-export class Component extends String {
+export class Component extends Str {
   constructor(title, meta) {
     super(title, meta);
     delete this.initialFilter;
@@ -272,6 +279,26 @@ Percent.extend = function extendPercent(icons, options = {}) {
   return extend(Percent, [icons], options);
 };
 
+
+function EnumLabel(props) {
+  const { self, upMeta, index, enumKey: key, titleClass, invalidClass } = props;
+
+  return (<table className="table-horizontal-small table-vertical-small"><tbody>{
+    Object.values(self.declaration).concat([undefined]).sort().map(value => {
+      const mapped = self.mapped(value, upMeta);
+      const isInvalid = self.invalid(value);
+      const cellClass = isInvalid ? invalidClass : "";
+
+      return (<tr key={value}>
+        <td>{ self.renderValue(value, index, key, upMeta) }</td>
+        <td>{ mapped.value ?? value }</td>
+        <td className={titleClass}>{ metaMix(upMeta, self.meta).t(mapped.title) }</td>
+        <td className={cellClass}>{ cellClass ? "*" : "" }</td>
+      </tr>);
+    })
+  }</tbody></table>);
+}
+
 export class Enum extends Component {
   constructor(title, meta, declaration, map) {
     super(title, meta);
@@ -282,20 +309,20 @@ export class Enum extends Component {
 
   renderValue(value, _index, _key, meta) {
     const upMeta = metaMix(meta, this.meta);
-    const rvalue = this.read(value);
-    if (rvalue === undefined)
-      return <EnumComponent
-        values={{ [undefined]: upMeta.na }}
-        enumKey={undefined}
-        tooltip={upMeta.naTooltip}
-      />;
+    return <EnumComponent
+      values={{ ...this.map,  [undefined]: upMeta.na }}
+      enumKey={value}
+      tooltip={value === undefined ? upMeta.naTooltip : null}
+    />;
+  }
 
-    return <EnumComponent values={this.map} enumKey={rvalue} />;
+  Label(props) {
+    return EnumLabel(props);
   }
 
   mapped(value, meta) {
     const upMeta = metaMix(meta, this.meta);
-    return this.map[this.read(value)] ?? upMeta.na;
+    return this.map[value] ?? upMeta.na;
   }
 
   format(value, meta) {
@@ -339,8 +366,7 @@ export class Enum extends Component {
   invalid(value) {
     if (value === undefined)
       return true;
-    const rvalue = this.read(value);
-    return isNaN(rvalue) || rvalue;
+    return isNaN(value) ? value !== Object.keys(this.map)[0] : value;
   }
 }
 
@@ -369,7 +395,6 @@ export class Bool extends Enum {
   }
 
   Filter(props) {
-    // console.log("Bool.Filter", props, props.superType.meta);
     if (props.superType.meta?.Filter?.Bool)
       return props.superType.meta.Filter.Bool(props);
 
@@ -384,13 +409,13 @@ export class Bool extends Enum {
       },
       1: {
         value: 1,
-        mapped: true,
-        label: "true (" + (numbers[true] ?? 0) + ")",
+        mapped: false,
+        label: "false (" + (numbers[false] ?? 0) + ")",
       },
       2: {
         value: 2,
-        mapped: false,
-        label: "false (" + (numbers[false] ?? 0) + ")",
+        mapped: true,
+        label: "true (" + (numbers[true] ?? 0) + ")",
       },
       3: { // only show undefined values
         value: 3,
@@ -399,7 +424,13 @@ export class Bool extends Enum {
       },
     };
 
-    const reverseMap = { [null]: 0, [true]: 1, [false]: 2, ["undefined"]: 3 };
+    const reverseMap = {
+      [null]: 0,
+      [false]: 1,
+      [true]: 2,
+      ["undefined"]: 3
+    };
+
     const [current, setCurrent] = useState(reverseMap[value]);
     const mapped = valuesMap[current];
 
@@ -424,7 +455,7 @@ export class Bool extends Enum {
   }
 
   invalid(value) {
-    return !this.read(value);
+    return !value;
   }
 }
 
@@ -459,7 +490,7 @@ export class Checkbox extends Bool {
   }
 
   read(value) {
-    return !super.read(value);
+    return super.read(value) === false; // here we reverse
   }
 
   renderValue(value, index, key) {
@@ -495,7 +526,7 @@ export class RecurseBool extends Bool {
 
     for (const [key, value] of Object.entries(value)) {
       const type = this.types[key];
-      if (type.invalid(value))
+      if (type.invalid(type.read(value)))
         return false;
     }
 
@@ -601,7 +632,7 @@ export class DictionaryOf extends Bool {
   }
 
   realRead(value, dataKey = []) {
-    if (!value)
+    if (value === undefined)
       return undefined;
 
     if (dataKey.length) {
@@ -610,20 +641,20 @@ export class DictionaryOf extends Bool {
       return Object.keys(value).reduce((a, key) => dummy.realRead(value[key][head], tail) ?? a);
     }
 
-    return value === undefined ? undefined : true;
+    return value;
   }
 
   read(value) {
     if (value === undefined)
-      return true;
+      return this.meta.naOk ? true : undefined;
 
     const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
 
     for (const key of Object.keys(value))
-      if (dummy.invalid(value[key]))
-        return false;
+      if (dummy.invalid(dummy.read(value[key])))
+        return true;
 
-    return true;
+    return false;
   }
 
   preprocess(data, meta, parentKey) {
@@ -680,54 +711,25 @@ export class DictionaryOf extends Bool {
         dummy.onChange(rvalue[key], rprevious[key]);
     });
   }
+
+  Label(props) {
+    const { self, upMeta } = props;
+    const subType = new self.SubType("dummy", metaMix(self.meta, upMeta), ...self.subTypeArgs);
+
+    return (<>
+      { EnumLabel(props) }
+
+      <div>{ subType.constructor.name }</div>
+
+      { subType.Label({ ...props, self: subType }) }
+    </>);
+  }
 }
 
 DictionaryOf.extend = (map, SubType, subTypeArgs, options = {}) =>
   extend(DictionaryOf, [map, SubType, subTypeArgs], options);
 
-// export class Button extends Component {
-//   constructor(title, onClick) {
-//     super(title, null);
-//     this.onClick = onClick;
-//   }
-
-//   renderValue() {
-//     return (<Button onClick={this.onClick}>
-//       { this.title }
-//     </Button>);
-//   }
-// }
-
-// export class Modal extends Button {
-//   constructor(title, onClick, Modal) {
-//     super(title, onClick);
-//     this.Modal = Modal;
-//   }
-// }
-
-// export class BaseToggle extends Button {
-//   constructor(title, onClick, Toggle) {
-//     super(title, onClick);
-//     this.Toggle = Toggle;
-//   }
-
-//   renderValue(value) {
-//     const Toggle = this.Toggle;
-
-//     return (<div>
-//       { this.title }
-//       <Toggle onToggle={this.onClick} toggle={this.read(value)} />
-//     </div>);
-//   }
-// }
-
-// export class Toggle extends BaseToggle {
-//   constructor(title, onClick) {
-//     super(title, onClick, Toggle);
-//   }
-// }
-
-export class DateTime extends String {
+export class DateTime extends Str {
   constructor(title, meta) {
     super(title, meta);
     this.initialFilter = {};
