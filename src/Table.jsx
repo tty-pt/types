@@ -4,16 +4,7 @@ import MyPropTypes from "./prop-types";
 import MaybeTip from "./MaybeTip";
 import useFilters from "./useFilters";
 import IconButton from "./IconButton";
-
-const defaultTableClass = "table-layout size-horizontal border-collapse";
-const defaultContainerClass = "margin-left-small border-top " + defaultTableClass;
-const defaultHeaderClass = "horizontal-small align-items";
-const defaultInvalidClass = "color-error-light";
-const defaultTitleClass = "font-weight";
-const defaultDetailsClass = "pad horizontal flex-wrap flex-grow-children";
-const defaultDetailClass = "overflow-hidden " + defaultTableClass;
-const lineClass = "border-top";
-const defaultThClass = "text-overflow overflow-hidden pad";
+import defaultCast from "./defaultCast";
 
 export function titleCamelCase(camelCase) {
   const almost = camelCase.replace(/([A-Z])/g, function (g) { return " " + g; });
@@ -27,11 +18,13 @@ function Details(props) {
   } = props;
 
   const { Tooltip = MaybeTip } = components;
-  const containerClass = cast.container ?? defaultContainerClass;
-  const headerClass = cast.header ?? defaultHeaderClass;
-  const titleClass = cast.title ?? defaultTitleClass;
-  const invalidClass = cast.invalid ?? defaultInvalidClass;
-  const detailClass = cast.detail ?? defaultDetailClass;
+  const containerClass = cast.container ?? defaultCast.container;
+  const headerClass = cast.header ?? defaultCast.header;
+  const titleClass = cast.title ?? defaultCast.title;
+  const invalidClass = cast.invalid ?? defaultCast.invalid;
+  const detailClass = cast.detail ?? defaultCast.detail;
+  const tooltipContainerClass = cast.tooltipContainer ?? defaultCast.tooltipContainer;
+  const typeTitleClass = cast.typeTitle ?? defaultCast.typeTitle;
 
   const maybeTableMap = {
     [true]: (field, value, pType, subType, meta) => {
@@ -66,11 +59,11 @@ function Details(props) {
         return (<>
           <tr key={field}>
             <td className={headerClass}>
-              { renderValue ? <span>{ subType.renderValue(subType.read(value), index, field, upMeta) }</span> : null }
+              { renderValue ? <span>{ subType.renderValue(subType.read(value), index, field, upMeta, cast) }</span> : null }
               <span className={titleClass}>
-                <Tooltip tooltip={<div className="vertical-small flex text-align">
-                    <div className="font-size-14 pad-top-small">{ subType.constructor.name }</div>
-                    <Label self={subType} upMeta={upMeta} index={index} enumKey={field} titleClass={titleClass} invalidClass={invalidClass} />
+                <Tooltip cast={cast} tooltip={<div className={tooltipContainerClass}>
+                    <div className={typeTitleClass}>{ subType.constructor.name }</div>
+                    <Label self={subType} upMeta={upMeta} index={index} enumKey={field} cast={cast} />
                 </div>}>{
                 titleFormat(meta.t(pType.SubType
                   ? titleCamelCase(field)
@@ -80,7 +73,7 @@ function Details(props) {
               </span>
             </td>
             <td className={cellClass}>
-              <Tooltip tooltip={tooltip}>{ children }</Tooltip>
+              <Tooltip cast={cast} tooltip={tooltip}>{ children }</Tooltip>
             </td>
           </tr>
           { recurseEl }
@@ -121,11 +114,11 @@ function Details(props) {
 
         return (<>
           <div key={field} className={headerClass}>
-            { renderValue ? <span>{ subType.renderValue(subType.read(value), index, field, upMeta) }</span> : null }
+            { renderValue ? <span>{ subType.renderValue(subType.read(value), index, field, upMeta, cast) }</span> : null }
             <span className={titleClass}>
-              <Tooltip tooltip={<div className="vertical-small flex text-align">
-                  <div className="font-size-14 pad-top-small">{ subType.constructor.name }</div>
-                  <Label self={subType} upMeta={upMeta} index={index} enumKey={field} titleClass={titleClass} invalidClass={invalidClass} />
+              <Tooltip cast={cast} tooltip={<div className={tooltipContainerClass}>
+                  <div className={typeTitleClass}>{ subType.constructor.name }</div>
+                  <Label self={subType} upMeta={upMeta} index={index} enumKey={field} cast={cast} />
               </div>}>{
               titleFormat(meta.t(pType.SubType
                 ? titleCamelCase(field)
@@ -134,7 +127,7 @@ function Details(props) {
               }</Tooltip>
             </span>
             <span className={cellClass}>
-              <Tooltip tooltip={tooltip}>{ children }</Tooltip>
+              <Tooltip cast={cast} tooltip={tooltip}>{ children }</Tooltip>
             </span>
           </div>
           { recurseEl }
@@ -221,7 +214,7 @@ function DetailsPanel(props) {
     />);
   }
 
-  return (<div className={cast.details ?? defaultDetailsClass}>
+  return (<div className={cast.details ?? defaultCast.details}>
     { details.map((detail, idx) => renderDetails(idx, rowData, detail)) }
   </div>);
 }
@@ -242,12 +235,12 @@ DetailsPanel.propTypes = {
 };
 
 function Line(props) {
-  const { data, index, type, className, columns } = props;
-  const colClass = "pad " + className;
+  const { data, index, type, className, columns, cast } = props;
+  const colClass = (cast.col ?? defaultCast.col) + " " + className;
 
   const columnsEl = columns.map(key => (
     <td className={colClass} key={key}>
-      { type.types[key].renderColumn(data[key], index, key, type.meta) }
+      { type.types[key].renderColumn(data[key], index, key, type.meta, cast) }
     </td>
   ));
 
@@ -263,22 +256,23 @@ Line.propTypes = {
 };
 
 function ExpandLine(props) {
-  const { data, index, type, className, icons, detailPanel, columns } = props;
+  const { data, index, type, className, icons, detailPanel, columns, cast } = props;
   const [ open, setOpen ] = useState(false);
-  const colClass = "pad " + className;
+  const colClass = (cast.col ?? defaultCast.col) + " " + className;
+  const rotateClass = cast.rotate ?? defaultCast.rotate;
 
   const columnsEl = [(
     <td key="expand" className={colClass}>
       <IconButton
         data-testid="expand"
-        iconClassName={open ? "rotate" : ""}
+        iconClassName={open ? rotateClass : ""}
         Component={icons.DetailPanel}
         onClick={() => setOpen(!open)}
       />
     </td>
   )].concat(columns.map(key => (
     <td key={key} className={colClass}>
-      { type.types[key].renderColumn(data[key], index, key, type.meta) }
+      { type.types[key].renderColumn(data[key], index, key, type.meta, cast) }
     </td>
   )));
 
@@ -300,16 +294,15 @@ ExpandLine.propTypes = {
   icons: PropTypes.object.isRequired,
   detailPanel: PropTypes.func.isRequired,
   columns: PropTypes.array.isRequired,
+  cast: PropTypes.object,
 };
 
-const horizontalCenterClass = "horizontal flex-wrap align-items";
-
 function DefaultToolbar(props) {
-  const { title, children } = props;
+  const { title, children, cast } = props;
 
-  return (<div className={horizontalCenterClass + " justify-content-space-between"}>
-    <span className="h-5">{ title }</span>
-    <div className={horizontalCenterClass + " justify-content-end"}>
+  return (<div className={cast.toolbar?.container ?? defaultCast.toolbar.container}>
+    <span className={cast.toolbar?.title ?? defaultCast.toolbar.title}>{ title }</span>
+    <div className={cast.toolbar?.content ?? defaultCast.toolbar.content}>
       { children }
     </div>
   </div>);
@@ -328,12 +321,14 @@ export default function Table(props) {
     titleFormat = title => title + ": ",
     renderValue, detailsTable, global,
   } = props;
-  const thClass = cast.th ?? defaultThClass;
-  const tableClass = cast.table ?? defaultTableClass;
-  const titleClass = cast.title ?? defaultTitleClass;
-  const invalidClass = cast.invalid ?? defaultInvalidClass;
+  const thClass = cast.th ?? defaultCast.th;
+  const tableClass = cast.table ?? defaultCast.table;
+  const lineClass = cast.line ?? defaultCast.line;
+  const tooltipContainerClass = cast.tooltipContainer ?? defaultCast.tooltipContainer;
+  const typeTitleClass = cast.typeTitle ?? defaultCast.typeTitle;
+  const tableParentClass = cast.tableParent ?? defaultCast.tableParent;
   const { Toolbar = DefaultToolbar } = components;
-  const { filtersEl, filteredData } = useFilters({ data, type, config: filters, global });
+  const { filtersEl, filteredData } = useFilters({ data, type, config: filters, global, cast });
   const upMeta = {
     t: t ?? (a => a),
     ...type.meta,
@@ -362,9 +357,9 @@ export default function Table(props) {
     // TODO support recursive type columns aka "robot.name"
     columns.map((key, index) => {
       const Label = type.types[key].Label;
-      return (<th key={key} className={thClass}><Tooltip tooltip={<div className="vertical-small flex text-align">
-          <div className="font-size-14 pad-top-small">{ type.types[key].constructor.name }</div>
-          <Label self={type.types[key]} upMeta={upMeta} index={index} enumKey={key} titleClass={titleClass} invalidClass={invalidClass} />
+      return (<th key={key} className={thClass}><Tooltip cast={cast} tooltip={<div className={tooltipContainerClass}>
+          <div className={typeTitleClass}>{ type.types[key].constructor.name }</div>
+          <Label self={type.types[key]} upMeta={upMeta} index={index} enumKey={key} cast={cast} />
         </div>}>
         { upMeta.t(type.types[key].title) }
       </Tooltip></th>);
@@ -383,20 +378,21 @@ export default function Table(props) {
       detailPanel={detailPanel}
       className={lineClass}
       columns={columns}
+      cast={cast}
     />
   ));
 
   return (<>
-    <Toolbar title={title} data={data}>
+    <Toolbar title={title} data={data} cast={cast}>
       { filtersEl }
     </Toolbar>
 
-    <div className="typed paper overflow">
+    <div className={tableParentClass}>
       <table className={tableClass}>
         <thead>
           <tr>{ headEl }</tr>
         </thead>
-        <tbody className="border-top">
+        <tbody className={lineClass}>
           { linesEl }
         </tbody>
       </table>

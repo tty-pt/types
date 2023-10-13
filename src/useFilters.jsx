@@ -43,7 +43,7 @@ function defaultGlobalFilter(type, item, filters) {
   return type.format(item).substring(0, filters.global.length) === filters.global;
 }
 
-function _getFiltersEl(res, superType, type, data, config, filters, setFilters, prefix = "") {
+function _getFiltersEl(res, superType, type, data, config, filters, setFilters, prefix = "", cast) {
   // console.log("_getFiltersEl", superType.title, type.title, config, filters, prefix);
   for (const con of config) {
     switch (typeof con) {
@@ -51,7 +51,7 @@ function _getFiltersEl(res, superType, type, data, config, filters, setFilters, 
     case "object":
       if (con.filters) {
         let deepRes = [];
-        _getFiltersEl(deepRes, superType, type, data, con.filters, filters, setFilters, prefix);
+        _getFiltersEl(deepRes, superType, type, data, con.filters, filters, setFilters, prefix, cast);
         res.push(<div key={prefix + " " + type.title} className={con.className}>{ deepRes }</div>);
       } else
         res.push(con);
@@ -74,7 +74,7 @@ function _getFiltersEl(res, superType, type, data, config, filters, setFilters, 
       _getFiltersEl(res, superType, subType, data, [tailDots.join(".")], filter, (newValue, subKey) => setFilters({
         ...filter,
         [subKey]: newValue,
-      }, headDot), fullKey);
+      }, headDot), fullKey, cast);
 
       continue;
     }
@@ -86,19 +86,20 @@ function _getFiltersEl(res, superType, type, data, config, filters, setFilters, 
       type={subType}
       superType={superType}
       value={filter}
+      cast={cast}
       onChange={value => setFilters(value, headDot)}
     />);
   }
 }
 
-function getFiltersEl(type, data, config, filters, setFilters) {
+function getFiltersEl(type, data, config, filters, setFilters, cast) {
   if (!data)
     return [];
   let res = [];
   _getFiltersEl(res, type, type, data, config, filters, (value, key) => setFilters({
     ...filters,
     [key]: value,
-  }));
+  }), undefined, cast);
   return res;
 }
 
@@ -126,7 +127,7 @@ function DefaultGlobalComponent(props) {
   return <StringFilter title="Multiple fields" { ...props } />;
 }
 
-export default function useFilters({ data, type, config, global }) {
+export default function useFilters({ data, type, config, global, cast }) {
   const flatConfig = useMemo(() => flattenConfig(config), [config]);
   const [ filters, setFilters ] =  useState(keyedFilter(type, flatConfig));
   const {
@@ -138,7 +139,7 @@ export default function useFilters({ data, type, config, global }) {
       key="filter-global" dataKey="global" data={data} type={type} superType={type}
       onChange={value => setFilters({ ...filters, global: value })}
     />
-  )] : []).concat(getFiltersEl(type, data, config, filters, setFilters)), [data, config, filters]);
+  )] : []).concat(getFiltersEl(type, data, config, filters, setFilters, cast)), [data, config, filters]);
   const filteredData = useMemo(() => data ? data.filter(item => includes(type, filters, item) && (!global || !filters.global || globalIncludes(globalFilter, type, filters, item))) : [], [data, filters]);
 
   if (!data)

@@ -11,6 +11,7 @@ import { mapCount } from "./utils";
 import { Percent as PercentComponent } from "./Percent";
 import { Enum as EnumComponent } from "./Enum";
 import { StringFilter } from "./StringFilter";
+import defaultCast from "./defaultCast";
 
 export
 const defaultMeta = {
@@ -70,8 +71,9 @@ function delKey(object, key) {
 }
 
 function TextCenter(props) {
-  const { children } = props;
-  return <div className="text-align">{children}</div>;
+  const { children, cast } = props;
+  const textCenterClass = cast.textCenter ?? defaultCast.textCenter;
+  return <div className={textCenterClass}>{children}</div>;
 }
 
 TextCenter.propTypes = {
@@ -79,8 +81,9 @@ TextCenter.propTypes = {
 };
 
 function FHCenter(props) {
-  const { children } = props;
-  return (<div className="horizontal-0 justify-content">
+  const { children, cast } = props;
+  const fhCenterClass = cast.fhCenter ?? defaultCast.fhCenter;
+  return (<div className={fhCenterClass}>
     { children }
   </div>);
 }
@@ -103,12 +106,14 @@ TextFilter.propTypes = {
 
 export
 function Filter(props) {
-  const { chipKey, label, active, value, ...rest } = props;
+  const { chipKey, label, active, value, cast, ...rest } = props;
+  const activeClass = cast?.type?.Enum?.filter?.active ?? defaultCast.type.Enum.filter.active;
+  const inactiveClass = cast?.type?.Enum?.filter?.inactive ?? defaultCast.type.Enum.filter.inactive;
 
   return (<Chip
     data-testid={"chip-" + chipKey}
     label={`${label} (${value})`}
-    className={active ? "chip-active" : "chip"}
+    className={active ? activeClass : inactiveClass}
     { ...rest }
   />);
 }
@@ -135,7 +140,7 @@ export class Integer {
     return this.realRead(value);
   }
 
-  renderValue(value, _index, _key, meta) {
+  renderValue(value, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
     const rvalue = this.read(value);
     if (rvalue !== undefined)
@@ -144,11 +149,12 @@ export class Integer {
       return <Tooltip title={upMeta.naTooltip}>{upMeta.na.title}</Tooltip>;
   }
 
-  renderColumn(value, index, key, meta) {
+  renderColumn(value, index, key, meta, cast) {
     return <TextCenter
+      cast={cast}
       data-testid={"column-" + key}
     >
-      {this.renderValue(value, index, key, meta)}
+      {this.renderValue(value, index, key, meta, cast)}
     </TextCenter>;
   }
 
@@ -231,11 +237,12 @@ export class Component extends Str {
     delete this.initialFilter;
   }
 
-  renderColumn(value, index, key, meta) {
+  renderColumn(value, index, key, meta, cast) {
     return <FHCenter
+      cast={cast}
       data-testid={"column-" + key}
     >
-      { this.renderValue(value, index, key, meta) }
+      { this.renderValue(value, index, key, meta, cast) }
     </FHCenter>;
   }
 
@@ -250,7 +257,7 @@ export class Percent extends Component {
     this.icons = icons;
   }
 
-  renderValue(value, _index, _key, meta) {
+  renderValue(value, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
     const rvalue = this.read(value);
     if (!rvalue)
@@ -281,19 +288,23 @@ Percent.extend = function extendPercent(icons, options = {}) {
 
 
 function EnumLabel(props) {
-  const { self, upMeta, index, enumKey: key, titleClass, invalidClass } = props;
+  const { self, upMeta, index, enumKey: key, cast } = props;
+  const titleClass = cast.title ?? defaultCast.title;
+  const invalidClass = cast.invalid ?? defaultCast.invalid;
+  const enumLabelClass = cast.enumLabel ?? defaultCast.enumLabel;
 
-  return (<table className="table-horizontal-small table-vertical-small"><tbody>{
+  return (<table className={enumLabelClass}><tbody>{
     Object.values(self.declaration).concat([undefined]).sort().map(value => {
       const mapped = self.mapped(value, upMeta);
-      const isInvalid = self.invalid(value);
-      const cellClass = isInvalid ? invalidClass : "";
+      const invalidEl = self.invalid(value) ? (
+        <td className={invalidClass}>*</td>
+      ) : <td></td>;;
 
       return (<tr key={value}>
-        <td>{ self.renderValue(value, index, key, upMeta) }</td>
+        <td>{ self.renderValue(value, index, key, upMeta, cast) }</td>
         <td>{ mapped.value ?? value }</td>
         <td className={titleClass}>{ metaMix(upMeta, self.meta).t(mapped.title) }</td>
-        <td className={cellClass}>{ cellClass ? "*" : "" }</td>
+        { invalidEl }
       </tr>);
     })
   }</tbody></table>);
@@ -307,7 +318,7 @@ export class Enum extends Component {
     this.map = map;
   }
 
-  renderValue(value, _index, _key, meta) {
+  renderValue(value, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
     return <EnumComponent
       values={{ ...this.map,  [undefined]: upMeta.na }}
@@ -339,7 +350,8 @@ export class Enum extends Component {
   }
 
   Filter(props) {
-    const { type, superType, value, onChange, dataKey, data } = props;
+    const { type, superType, value, onChange, dataKey, data, cast } = props;
+    const enumFilterClass = cast?.type?.Enum?.filter?.root ?? defaultCast.type.Enum.filter.root;
     const numbers = mapCount(superType, data, dataKey);
 
     const filtersEl = Object.values(type.declaration).map(key => {
@@ -348,6 +360,7 @@ export class Enum extends Component {
         chipKey={dataKey + "-" + key}
         label={type.map[key].title}
         value={numbers[key] ?? 0}
+        cast={cast}
         active={value ? value[key] : false}
         onClick={value?.[key] ? () => onChange(delKey(value, key)) : () => onChange({
           ...(value ?? {}),
@@ -357,7 +370,7 @@ export class Enum extends Component {
     });
 
     return (
-      <div data-testid={"filter-" + dataKey} className="horizontal-small align-items-center justify-content-space-between flex-wrap">
+      <div data-testid={"filter-" + dataKey} className={enumFilterClass}>
         { filtersEl }
       </div>
     );
@@ -493,7 +506,7 @@ export class Checkbox extends Bool {
     return super.read(value) === false; // here we reverse
   }
 
-  renderValue(value, index, key) {
+  renderValue(value, index, key, _meta, _cast) {
     return (<InnerCheckbox
       name={key}
       index={index}
@@ -735,7 +748,7 @@ export class DateTime extends Str {
     this.initialFilter = {};
   }
 
-  renderValue(value, _index, _key, meta) {
+  renderValue(value, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
     const rvalue = this.read(value);
     if (rvalue !== undefined)
@@ -773,9 +786,10 @@ export class DateTime extends Str {
   }
 
   Filter(props) {
-    const { dataKey, type, value, onChange } = props;
+    const { dataKey, type, value, onChange, cast } = props;
+    const dateTimeFilterClass = cast?.type?.DateTime?.filter ?? defaultCast.type.DateTime.filter;
 
-    return (<div data-testid={"filter-" + dataKey} className="paper pad-small vertical-small">
+    return (<div data-testid={"filter-" + dataKey} className={dateTimeFilterClass}>
       <TextField
         label={"Start " + type.title}
         type="datetime-local"
@@ -823,7 +837,7 @@ export class Fun extends Bool {
     this.data = data;
   }
 
-  renderValue(value) {
+  renderValue(value, _index, _key, _meta, _cast) {
     return (<Button onClick={value}>
       { this.title }
     </Button>);

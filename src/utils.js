@@ -1,20 +1,3 @@
-// function nugget(obj, keyArr) {
-//   console.log("nugget", obj, keyArr);
-//   const [headKey, ...tailKeys] = keyArr;
-//   const item = obj[headKey];
-//   if (!tailKeys.length)
-//     return item;
-//   return nugget(item, tailKeys);
-// }
-
-// function _get(obj, key, defaultValue) {
-//   const item = obj[key];
-//   if (!item)
-//     return item ?? defaultValue;
-//   const [headKey, ...tailKeys] = key.split(".");
-//   return _get(obj[headKey], tailKeys.join("."));
-// }
-
 export
 function mapCount(type, data, dataKey) {
   const key = typeof dataKey === "string" ? dataKey.split(".") : [dataKey];

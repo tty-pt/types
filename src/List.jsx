@@ -1,10 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
 import useFilters from "./useFilters";
+import defaultCast from "./defaultCast";
 
 const List = React.forwardRef((props, ref) => {
-  const { data, type, filters = [], Component, style, ...rest } = props;
-  const { filtersEl, filteredData } = useFilters({ data, type, config: filters });
+  const { data, type, filters = [], Component, style, cast, ...rest } = props;
+  const { filtersEl, filteredData } = useFilters({ data, type, config: filters, cast });
+  const filtersRootClass = cast?.filtersRoot ?? defaultCast.filtersRoot;
+  const filtersContainerClass = cast?.filtersContainer ?? defaultCast.filtersContainer;
 
   const componentsEl = filteredData.map((item, index) => {
     return (<Component
@@ -15,8 +18,8 @@ const List = React.forwardRef((props, ref) => {
     />);
   });
 
-  return (<div ref={ref} style={style} className="vertical overflow-auto">
-    <div className="horizontal flex-wrap align-items-center justify-content-end">
+  return (<div ref={ref} style={style} className={filtersRootClass}>
+    <div className={filtersContainerClass}>
       { filtersEl }
     </div>
 

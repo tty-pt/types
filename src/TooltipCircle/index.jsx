@@ -4,12 +4,14 @@ import Tooltip from "@material-ui/core/Tooltip";
 import MyPropTypes from "../prop-types";
 import { defaultMeta } from "../data-types";
 import Circle from "./Circle";
+import defaultCast from "../defaultCast";
 
 export default function TooltipCircle(props) {
-  const { value = defaultMeta.na, style, size = 20 } = props;
+  const { value = defaultMeta.na, style, size = 20, cast } = props;
+  const tooltipCircleClass = cast?.tooltipCircle ?? defaultCast.tooltipCircle;
 
   return (<Tooltip title={value.title}>
-    <span className="vertical-0 justify-content" style={style}>
+    <span className={tooltipCircleClass} style={style}>
       <Circle color={value.color} size={size} />
     </span>
   </Tooltip>);

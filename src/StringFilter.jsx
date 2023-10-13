@@ -3,12 +3,14 @@ import PropTypes from "prop-types";
 import SearchIcon from "@material-ui/icons/Search";
 import IconButton from "@material-ui/core/IconButton";
 import InputBase from "@material-ui/core/InputBase";
+import defaultCast from "./defaultCast";
 
 export
 function StringFilter(props) {
-  const { dataKey, title, value, onChange } = props;
+  const { dataKey, title, value, onChange, cast } = props;
+  const stringFilterClass = cast?.type?.Str?.filter ?? defaultCast.type.Str.filter;
 
-  return (<div data-testid={"filter-" + dataKey} className="paper horizontal-0">
+  return (<div data-testid={"filter-" + dataKey} className={stringFilterClass}>
     <IconButton aria-label={title}>
       <SearchIcon />
     </IconButton>
