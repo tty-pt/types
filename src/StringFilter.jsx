@@ -8,7 +8,7 @@ import defaultCast from "./defaultCast";
 export
 function StringFilter(props) {
   const { dataKey, title, value, onChange, cast } = props;
-  const stringFilterClass = cast?.type?.Str?.filter ?? defaultCast.type.Str.filter;
+  const stringFilterClass = cast.Str?.Filter ?? defaultCast.Str.Filter;
 
   return (<div data-testid={"filter-" + dataKey} className={stringFilterClass}>
     <IconButton aria-label={title}>
@@ -29,4 +29,5 @@ StringFilter.propTypes = {
   value: PropTypes.string,
   dataKey: PropTypes.string,
   onChange: PropTypes.func,
+  cast: PropTypes.object,
 };

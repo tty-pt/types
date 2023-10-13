@@ -20,7 +20,7 @@ Here, we don't use a MetaHandler, just some other features of types, to display 
 ```jsx
 import { Str, Table } from "@tty-pt/types"
 
-const type = new RecurseBool("Actor", {}, {
+const type = new Shape("Actor", {}, {
 	name: new Str("Name"),
 });
 
@@ -37,9 +37,9 @@ export default function NameTable() {
 
 # Slightly More Advanced Example
 ```jsx
-import { Str, RecurseBool, Enum, Bool } from "@tty-pt/types";
+import { Str, Shape, Enum, Bool } from "@tty-pt/types";
 import { IconGood, IconBad, IconNeutral } from "example";
-import dependencies from "lib/dependencies";
+import { fetcher, indexer } from "lib/dependencies";
 
 const STATE = {
 	good: 0,
@@ -53,7 +53,7 @@ const STATE_MAP = {
 	1: { title: "neutral", icon: IconNeutral },
 };
 
-const incomingType = new RecurseBool("Actor", {}, {
+const incomingType = new Shape("Actor", {}, {
 	name: new Str("Name"),
 	state: new Enum("State", {
 		default: STATE.good, // data will be set to this, even if it is not received
@@ -67,12 +67,12 @@ const incomingType = new RecurseBool("Actor", {}, {
 
 class ExampleMetaHandler extends MetaHandler {
 	constructor(type, options = {}) {
-		super(type, options.dependencies.fetcher, options.dependencies.indexer, options);
+		super(type, options.fetcher, options.indexer, options);
 	}
 }
 
 function createHandler(type, options = {}) {
-	return new MetaHandler(type, options.dependencies.fetcher, options.dependencies.indexer, options);
+	return new MetaHandler(type, options.fetcher, options.indexer, options);
 }
 
 
@@ -80,7 +80,7 @@ function createHandler(type, options = {}) {
 
 // if you had a different outcoming type from the incoming type,
 // you would provide an "adapter" to map the data to the options argument
-const tableHandler = createHandler(incomingType, { dependencies });
+const tableHandler = createHandler(incomingType, { fetcher, indexer });
 const outgoingType = incomingType;
 
 function App() {
@@ -179,19 +179,19 @@ const type = new Bool("Status", {}, map);
 const type = new Checkbox("Status", {}, map);
 ```
 
-## RecurseBool
+## Shape
 > Like Bool but it has a notion of recursion. It has a map of sub-types.
 ```js
-const type = new RecurseBool("Human", {}, map, {
+const type = new Shape("Human", {}, map, {
 	name: new Str("Name"),
 	age: new Integer("Age"),
 });
 ```
 
-## DictionaryOf
-> Like RecurseBool but it has a different notion of recursion. It has a map in which each key may correspond to a value of a certain type.
+## Dictionary
+> Like Shape but it has a different notion of recursion. It has a map in which each key may correspond to a value of a certain type.
 ```js
-const type = new DictionaryOf("Names", {}, map, Str, []);
+const type = new Dictionary("Names", {}, map, Str, []);
 ```
 Fourth argument is the SubType, and the fifth is the array of arguments provided to the SubType constructor.
 
@@ -238,30 +238,30 @@ The subscribe method receives a callback with the received data as an argument. 
 The unsubscribe method receives a subscription key.
 
 # Extending existing types
-Now suppose you want to create a type based on DictionaryOf, but that has a preset map that it uses.
+Now suppose you want to create a type based on Dictionary, but that has a preset map that it uses.
 So that we don't need to provide the map every time you want a field of that type. You can do something like this:
 
 ```js
 // file: src/types.js
-import { extend, DictionaryOf as InnerDictionaryOf } from "@tty-pt/types";
+import { extend, Dictionary as InnerDictionary } from "@tty-pt/types";
 
-export class DictionaryOf extends InnerDictionaryOf {
+export class Dictionary extends InnerDictionary {
   constructor(title, meta, SubType, subTypeArgs) {
     super(title, meta, BOOL_STATUS_MAP, SubType, subTypeArgs);
   }
 }
 
-DictionaryOf.extend = (SubType, subTypeArgs = [], options = {}) =>
-  extend(DictionaryOf, [SubType, subTypeArgs], options);
+Dictionary.extend = (SubType, subTypeArgs = [], options = {}) =>
+  extend(Dictionary, [SubType, subTypeArgs], options);
 ```
 
 Then you can use it like so:
 
 ```js
 // file: src/views/Test.js
-import { DictionaryOf } from "../types";
+import { Dictionary } from "../types";
 
-const type = new DictionaryOf("Names", {}, Str, []);
+const type = new Dictionary("Names", {}, Str, []);
 
 /* ... */
 ```
@@ -285,16 +285,64 @@ interface TooltipProps {
 	className: string;
 }
 
-// this isn't necessary in most circustances, it is just nice to have.
-interface Dependencies {
-	MagicContext?: MagicContext; // @tty-pt/styles. FIXME format
-}
-
 interface GlobalFilterProps {
 	value: any;
 	dataKey: string; // TODO rename to typeKey
 	onChange: any => void; // TODO fix return type
-	dependencies?: Dependencies;
+}
+
+// these are classNames
+interface Cast {
+	invalid: string, // invalid field
+	line: string, // draw a line
+	rotate: string, // rotate 90 degrees
+	outline: string, // outline all round
+	TextCenter: string, // center text
+	FHCenter: string, // flex center
+	Table: {
+		root: string,
+		title: string,
+		table, // main table component
+		th: string,
+		td: string,
+		Toolbar: {
+			root: string,
+			content: string, // usually contains filters
+		},
+	},
+	Label: {
+		title: string,
+	},
+	Details: {
+		root: string,
+		column:  string,
+		header: string, // the main line
+		container:  string, // for recurse types
+		title: string, // left side of header
+	},
+	List: {
+		root: string,
+		Toolbar: string,
+	},
+	Tooltip: {
+		root: string,
+		content: string,
+	},
+	TooltipCircle: string,
+	Str: {
+		Filter: string,
+	},
+	DateTime: {
+		Filter: string,
+	},
+	Enum: {
+		Label: string,
+		Filter: {
+			root: string,
+			active: string, // active chip
+			inactive: string, // inactive chip
+		},
+	},
 }
 
 interface TableProps {
@@ -309,24 +357,13 @@ interface TableProps {
 	};
 	details?: string[][]; // these can only be simple words for now (FIXME)
 	t?: string => string; // translate functionality
-	type: RecurseBool;
+	type: Shape;
 	title?: string;
 	name?: string; // used for identifying which inputs belong to this table, in case the table has inputs.
-	dependencies?: Dependencies;
 	components?: {
 		Tooltip?: React.Component<TooltipProps>; // Custom Tooltip for detail headers
 	};
-	cast?: {
-		th?: string; // spell for th elements of the main table
-		table?: string; // spell for the main table component
-		details?: {
-			container?: string; // spell for the box of recursive-type elements.
-			header?: string; // spell for be applied to the header of the type (not the body of recursive-types).
-			title?: string; // spell for the title part of the header element
-			invalid?: string; // spell for invalid data to be presented in the formatted string of the type.
-			detail?: string; // spell to be applied to the main (biggest) component of the details.
-		};
-	};
+	cast?: Cast;
 	renderValue?: Boolean; // do you wish to render icons for enums, etc?
 	titleFormat?: string => string; // you can change how titles are displayed here
 	detailsTable?: Boolean; // do you wish to try to show details as sub-tables?
@@ -349,11 +386,10 @@ interface ListItemProps {
 interface ListProps {
 	data: object[];
 	style: object;
-	type: RecurseBool;
+	type: Shape;
 	filters: Filters; // just a bit more...
 	onClick: object; // FIXME
 	Component: React.Component<ListItemProps>;
-	dependencies: Dependencies;
 	[key: string]?: any;
 }
 ```

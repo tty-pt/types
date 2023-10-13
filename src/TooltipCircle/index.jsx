@@ -8,11 +8,11 @@ import defaultCast from "../defaultCast";
 
 export default function TooltipCircle(props) {
   const { value = defaultMeta.na, style, size = 20, cast } = props;
-  const tooltipCircleClass = cast?.tooltipCircle ?? defaultCast.tooltipCircle;
+  const tooltipCircleClass = cast?.TooltipCircle ?? defaultCast.TooltipCircle;
 
   return (<Tooltip title={value.title}>
     <span className={tooltipCircleClass} style={style}>
-      <Circle color={value.color} size={size} />
+      <Circle color={value.color} size={size} cast={cast} />
     </span>
   </Tooltip>);
 }

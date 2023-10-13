@@ -16,7 +16,7 @@ function keyedFilter(type, filterColumns) {
 function includes(type, filters, item) {
   // console.log("includes", type, filters, item);
   if (!type.types)
-    return type.filter(item, filters);
+    return type.filter(type.read(item), filters);
 
   for (const [key, filter] of Object.entries(filters)) {
     if (key === "global")
@@ -127,7 +127,7 @@ function DefaultGlobalComponent(props) {
   return <StringFilter title="Multiple fields" { ...props } />;
 }
 
-export default function useFilters({ data, type, config, global, cast }) {
+export default function useFilters({ data, type, config, global, cast = {} }) {
   const flatConfig = useMemo(() => flattenConfig(config), [config]);
   const [ filters, setFilters ] =  useState(keyedFilter(type, flatConfig));
   const {
@@ -136,7 +136,7 @@ export default function useFilters({ data, type, config, global, cast }) {
   } = global ?? {};
   const filtersEl = useMemo(() => (global ? [(
     <GlobalComponent
-      key="filter-global" dataKey="global" data={data} type={type} superType={type}
+      key="filter-global" dataKey="global" data={data} type={type} superType={type} cast={cast}
       onChange={value => setFilters({ ...filters, global: value })}
     />
   )] : []).concat(getFiltersEl(type, data, config, filters, setFilters, cast)), [data, config, filters]);
@@ -151,7 +151,7 @@ export default function useFilters({ data, type, config, global, cast }) {
     };
 
   if (!type.types)
-    throw new Error("useFilters type must be RecurseBool");
+    throw new Error("useFilters type must be Shape");
 
   // console.log("useFilters", filterColumns, filters, filtersEl, filteredData);
 

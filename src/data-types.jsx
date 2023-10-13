@@ -12,6 +12,8 @@ import { Percent as PercentComponent } from "./Percent";
 import { Enum as EnumComponent } from "./Enum";
 import { StringFilter } from "./StringFilter";
 import defaultCast from "./defaultCast";
+// import pkg from "./../package.json";
+// console.log("TYPES ", pkg.version);
 
 export
 const defaultMeta = {
@@ -72,7 +74,7 @@ function delKey(object, key) {
 
 function TextCenter(props) {
   const { children, cast } = props;
-  const textCenterClass = cast.textCenter ?? defaultCast.textCenter;
+  const textCenterClass = cast.TextCenter ?? defaultCast.TextCenter;
   return <div className={textCenterClass}>{children}</div>;
 }
 
@@ -82,7 +84,7 @@ TextCenter.propTypes = {
 
 function FHCenter(props) {
   const { children, cast } = props;
-  const fhCenterClass = cast.fhCenter ?? defaultCast.fhCenter;
+  const fhCenterClass = cast.FHCenter ?? defaultCast.FHCenter;
   return (<div className={fhCenterClass}>
     { children }
   </div>);
@@ -107,8 +109,8 @@ TextFilter.propTypes = {
 export
 function Filter(props) {
   const { chipKey, label, active, value, cast, ...rest } = props;
-  const activeClass = cast?.type?.Enum?.filter?.active ?? defaultCast.type.Enum.filter.active;
-  const inactiveClass = cast?.type?.Enum?.filter?.inactive ?? defaultCast.type.Enum.filter.inactive;
+  const activeClass = cast?.Enum?.Filter?.active ?? defaultCast.Enum.Filter.active;
+  const inactiveClass = cast?.Enum?.Filter?.inactive ?? defaultCast.Enum.Filter.inactive;
 
   return (<Chip
     data-testid={"chip-" + chipKey}
@@ -140,25 +142,24 @@ export class Integer {
     return this.realRead(value);
   }
 
-  renderValue(value, _index, _key, meta, _cast) {
+  renderValue(value, _data, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
-    const rvalue = this.read(value);
-    if (rvalue !== undefined)
-      return rvalue;
-    else
-      return <Tooltip title={upMeta.naTooltip}>{upMeta.na.title}</Tooltip>;
+
+    return value === undefined ? (
+      <Tooltip title={upMeta.naTooltip}>{upMeta.na.title}</Tooltip>
+    ) : value;
   }
 
-  renderColumn(value, index, key, meta, cast) {
+  renderColumn(value, data, index, key, meta, cast) {
     return <TextCenter
       cast={cast}
       data-testid={"column-" + key}
     >
-      {this.renderValue(value, index, key, meta, cast)}
+      {this.renderValue(value, data, index, key, meta, cast)}
     </TextCenter>;
   }
 
-  format(value) {
+  format(value, _data, _meta) {
     return "" + value;
   }
 
@@ -205,8 +206,8 @@ export class Integer {
       this.meta.onChange(value);
   }
 
-  detailsTooltip(value, meta) {
-    return value === undefined ? metaMix(meta, this.meta).naTooltip : this.format(value, meta);
+  detailsTooltip(value, data, meta) {
+    return value === undefined ? metaMix(meta, this.meta).naTooltip : this.format(value, data, meta);
   }
 }
 
@@ -237,17 +238,17 @@ export class Component extends Str {
     delete this.initialFilter;
   }
 
-  renderColumn(value, index, key, meta, cast) {
+  renderColumn(value, data, index, key, meta, cast) {
     return <FHCenter
       cast={cast}
       data-testid={"column-" + key}
     >
-      { this.renderValue(value, index, key, meta, cast) }
+      { this.renderValue(value, data, index, key, meta, cast) }
     </FHCenter>;
   }
 
-  format(value) {
-    return this.read(value);
+  format(value, _data, _meta) {
+    return value;
   }
 }
 
@@ -257,7 +258,7 @@ export class Percent extends Component {
     this.icons = icons;
   }
 
-  renderValue(value, _index, _key, meta, _cast) {
+  renderValue(value, _data, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
     if (!value)
       return <EnumComponent
@@ -269,15 +270,12 @@ export class Percent extends Component {
     return <PercentComponent icons={this.icons} level={value} />;
   }
 
-  format(value) {
-    return this.read(value) + "%";
+  format(value, _data, _meta) {
+    return value + "%";
   }
 
   invalid(value) {
-    if (value === undefined)
-      return true;
-    const rvalue = this.read(value);
-    return isNaN(rvalue) || rvalue < 0 || rvalue > 100;
+    return value === undefined || isNaN(value) || value < 0 || value > 100;
   }
 }
 
@@ -289,18 +287,18 @@ Percent.extend = function extendPercent(icons, options = {}) {
 function EnumLabel(props) {
   const { self, upMeta, index, enumKey: key, cast } = props;
   const titleClass = cast.title ?? defaultCast.title;
-  const invalidClass = cast.invalid ?? defaultCast.invalid;
-  const enumLabelClass = cast.enumLabel ?? defaultCast.enumLabel;
+  // const invalidClass = cast.invalid ?? defaultCast.invalid;
+  const enumLabelClass = cast.Enum?.Label ?? defaultCast.Enum.Label;
 
-  return (<table className={enumLabelClass}><tbody>{
+  return (<table key={self.constructor.name + "-" + key} className={enumLabelClass}><tbody>{
     Object.values(self.declaration).concat([undefined]).sort().map(value => {
       const mapped = self.mapped(value, upMeta);
       const invalidEl = self.invalid(value) ? (
-        <td className={invalidClass}>*</td>
+        <td>*</td>
       ) : <td></td>;;
 
-      return (<tr key={value}>
-        <td>{ self.renderValue(value, index, key, upMeta, cast) }</td>
+      return (<tr key={key + "-" + value}>
+        <td>{ self.renderValue(value, {}, index, key, upMeta, cast) }</td>
         <td>{ mapped.value ?? value }</td>
         <td className={titleClass}>{ metaMix(upMeta, self.meta).t(mapped.title) }</td>
         { invalidEl }
@@ -317,7 +315,7 @@ export class Enum extends Component {
     this.map = map;
   }
 
-  renderValue(value, _index, _key, meta, _cast) {
+  renderValue(value, _data, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
     return <EnumComponent
       values={{ ...this.map,  [undefined]: upMeta.na }}
@@ -335,22 +333,18 @@ export class Enum extends Component {
     return this.map[value] ?? upMeta.na;
   }
 
-  format(value, meta) {
+  format(value, meta, _data) {
     const upMeta = metaMix(meta, this.meta);
     return upMeta.t(this.mapped(value, meta).title);
   }
 
   filter(value, filterValue) {
-    if (filterValue === null)
-      return true;
-
-    const rvalue = this.read(value);
-    return filterValue[rvalue];
+    return filterValue === null || filterValue[value];
   }
 
   Filter(props) {
     const { type, superType, value, onChange, dataKey, data, cast } = props;
-    const enumFilterClass = cast?.type?.Enum?.filter?.root ?? defaultCast.type.Enum.filter.root;
+    const enumFilterClass = cast?.Enum?.Filter?.root ?? defaultCast.Enum.Filter.root;
     const numbers = mapCount(superType, data, dataKey);
 
     const filtersEl = Object.values(type.declaration).map(key => {
@@ -395,15 +389,9 @@ export class Bool extends Enum {
   }
 
   filter(value, filterValue) {
-    if (filterValue === null)
-      return true;
-
-    const rvalue = this.realRead(value);
-
-    if (filterValue === "undefined")
-      return value === undefined;
-
-    return rvalue === filterValue;
+    return filterValue === null || (
+      filterValue === "undefined" && value === undefined
+    ) || value === filterValue;
   }
 
   Filter(props) {
@@ -476,12 +464,12 @@ Bool.extend = function extendBool(map, options = {}) {
 };
 
 function InnerCheckbox(props) {
-  const { name, index, rvalue } = props;
-  const [ checked, setChecked ] = useState(rvalue);
+  const { name, index, value } = props;
+  const [ checked, setChecked ] = useState(value);
 
   useEffect(() => {
-    setChecked(rvalue);
-  }, [rvalue]);
+    setChecked(value);
+  }, [value]);
 
   return (<CheckboxComponent
     name={name + "_" + index}
@@ -493,7 +481,7 @@ function InnerCheckbox(props) {
 InnerCheckbox.propTypes = {
   name: PropTypes.string,
   index: PropTypes.number,
-  rvalue: PropTypes.bool,
+  value: PropTypes.bool,
 };
 
 export class Checkbox extends Bool {
@@ -505,16 +493,16 @@ export class Checkbox extends Bool {
     return super.read(value) === false; // here we reverse
   }
 
-  renderValue(value, index, key, _meta, _cast) {
+  renderValue(value, _data, index, key, _meta, _cast) {
     return (<InnerCheckbox
       name={key}
       index={index}
-      rvalue={this.read(value)}
+      value={value}
     />);
   }
 }
 
-export class RecurseBool extends Bool {
+export class Shape extends Bool {
   constructor(title, meta, map, types) {
     super(title, meta, map);
     this.types = types;
@@ -546,7 +534,7 @@ export class RecurseBool extends Bool {
   }
 
   preprocess(data, meta, parentKey) {
-    // console.log("RecurseBool.preprocess ENTRY", this.title, parentKey, meta, data);
+    // console.log("Shape.preprocess ENTRY", this.title, parentKey, meta, data);
     const upMeta = metaMix(meta, this.meta);
 
     const afterAt = (parentKey ?? "@").split("@")[1];
@@ -583,7 +571,7 @@ export class RecurseBool extends Bool {
     // const pKey = beforeAt && afterAt ? "" : (parentKey ?? "@");
 
     const ret = Object.entries(this.types).reduce((a, [key, type]) => {
-      // console.log("RecurseBool.preprocess item", this.title, data, key, type);
+      // console.log("Shape.preprocess item", this.title, data, key, type);
       const downMeta = metaMix(upMeta, type.meta);
       const downKey = (parentKey ?? "@") + (type.meta.from ?? key);
       const subGetter = this.meta.getter ?? type.meta.getter ?? defaultGetter;
@@ -599,7 +587,7 @@ export class RecurseBool extends Bool {
       else
         return a;
     }, {});
-    // console.log("RecurseBool.preprocess final", this.title, data, upMeta, parentKey, ret);
+    // console.log("Shape.preprocess final", this.title, data, upMeta, parentKey, ret);
     return ret;
   }
 
@@ -621,7 +609,7 @@ export class RecurseBool extends Bool {
   }
 
   onChange(value, previous) {
-    // console.log("RecurseBool.onChange", value, previous);
+    // console.log("Shape.onChange", value, previous);
     super.onChange(value, previous);
     const rvalue = value ?? {};
     const rprevious = previous ?? {};
@@ -632,11 +620,11 @@ export class RecurseBool extends Bool {
   }
 }
 
-RecurseBool.extend = function extendRecurseBool(map, types, options = {}) {
-  return extend(RecurseBool, [map, types], options);
+Shape.extend = function extendRecurseBool(map, types, options = {}) {
+  return extend(Shape, [map, types], options);
 };
 
-export class DictionaryOf extends Bool {
+export class Dictionary extends Bool {
   constructor(title, meta, map, SubType, subTypeArgs) {
     super(title, meta, map);
     this.SubType = SubType;
@@ -731,15 +719,15 @@ export class DictionaryOf extends Bool {
     return (<>
       { EnumLabel(props) }
 
-      <div>{ subType.constructor.name }</div>
+      <div key="subtype-title">{ subType.constructor.name }</div>
 
       { subType.Label({ ...props, self: subType }) }
     </>);
   }
 }
 
-DictionaryOf.extend = (map, SubType, subTypeArgs, options = {}) =>
-  extend(DictionaryOf, [map, SubType, subTypeArgs], options);
+Dictionary.extend = (map, SubType, subTypeArgs, options = {}) =>
+  extend(Dictionary, [map, SubType, subTypeArgs], options);
 
 export class DateTime extends Str {
   constructor(title, meta) {
@@ -747,16 +735,15 @@ export class DateTime extends Str {
     this.initialFilter = {};
   }
 
-  renderValue(value, _index, _key, meta, _cast) {
+  renderValue(value, _data, data, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
-    const rvalue = this.read(value);
-    if (rvalue !== undefined)
-      return this.format(value, meta);
+    if (value !== undefined)
+      return this.format(value, meta, data);
     else
       return <Tooltip title={upMeta.naTooltip}>{upMeta.na.title}</Tooltip>;
   }
 
-  format(value) {
+  format(value, _meta, _data) {
     switch (this.meta.format) {
     case "date":
       return value.toLocaleDateString();
@@ -770,10 +757,7 @@ export class DateTime extends Str {
   }
 
   invalid(value) {
-    if (value === undefined)
-      return true;
-    const rvalue = this.read(value);
-    return Object.prototype.toString.call(rvalue) !== "[object Date]" || isNaN(rvalue);
+    return value === undefined || Object.prototype.toString.call(value) !== "[object Date]" || isNaN(value);
   }
 
   filter(value, filterValue) {
@@ -786,7 +770,7 @@ export class DateTime extends Str {
 
   Filter(props) {
     const { dataKey, type, value, onChange, cast } = props;
-    const dateTimeFilterClass = cast?.type?.DateTime?.filter ?? defaultCast.type.DateTime.filter;
+    const dateTimeFilterClass = cast.DateTime?.Filter ?? defaultCast.DateTime.Filter;
 
     return (<div data-testid={"filter-" + dataKey} className={dateTimeFilterClass}>
       <TextField
@@ -836,7 +820,7 @@ export class Fun extends Bool {
     this.data = data;
   }
 
-  renderValue(value, _index, _key, _meta, _cast) {
+  renderValue(value, _data, _index, _key, _meta, _cast) {
     return (<Button onClick={value}>
       { this.title }
     </Button>);

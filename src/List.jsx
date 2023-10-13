@@ -4,10 +4,10 @@ import useFilters from "./useFilters";
 import defaultCast from "./defaultCast";
 
 const List = React.forwardRef((props, ref) => {
-  const { data, type, filters = [], Component, style, cast, ...rest } = props;
+  const { data, type, filters = [], Component, style, cast = {}, ...rest } = props;
   const { filtersEl, filteredData } = useFilters({ data, type, config: filters, cast });
-  const filtersRootClass = cast?.filtersRoot ?? defaultCast.filtersRoot;
-  const filtersContainerClass = cast?.filtersContainer ?? defaultCast.filtersContainer;
+  const listRootClass = cast.List?.root ?? defaultCast.List.root;
+  const listToolbarClass = cast.List?.Toolbar ?? defaultCast.List.Toolbar;
 
   const componentsEl = filteredData.map((item, index) => {
     return (<Component
@@ -18,8 +18,8 @@ const List = React.forwardRef((props, ref) => {
     />);
   });
 
-  return (<div ref={ref} style={style} className={filtersRootClass}>
-    <div className={filtersContainerClass}>
+  return (<div ref={ref} style={style} className={listRootClass}>
+    <div className={listToolbarClass}>
       { filtersEl }
     </div>
 
@@ -36,7 +36,6 @@ List.propTypes = {
   filters: PropTypes.array,
   onClick: PropTypes.object.isRequired,
   Component: PropTypes.elementType,
-  dependencies: PropTypes.object,
 };
 
 export default List;
