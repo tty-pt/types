@@ -259,15 +259,14 @@ export class Percent extends Component {
 
   renderValue(value, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
-    const rvalue = this.read(value);
-    if (!rvalue)
+    if (!value)
       return <EnumComponent
         values={{ [undefined]: upMeta.na }}
         enumKey={undefined}
         tooltip={upMeta.naTooltip}
       />;
 
-    return <PercentComponent icons={this.icons} level={rvalue} />;
+    return <PercentComponent icons={this.icons} level={value} />;
   }
 
   format(value) {
