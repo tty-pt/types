@@ -325,7 +325,6 @@ export default function Table(props) {
   const thClass = cast.Table?.th ?? defaultCast.Table.th;
   const tableClass = cast.Table?.table ?? defaultCast.Table.table;
   const lineClass = cast.line ?? defaultCast.line;
-  const tooltipRootClass = cast.Tooltip?.root ?? defaultCast.Tooltip.root;
   const labelTitleClass = cast.Label?.title ?? defaultCast.Label.title;
   const tableRootClass = cast.Table?.root ?? defaultCast.Table.root;
   const { Toolbar = DefaultToolbar } = components;

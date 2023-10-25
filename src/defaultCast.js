@@ -36,7 +36,7 @@ export default {
   Tooltip: {
     container: "opacity-biggest",
     root: "vertical-small flex text-align",
-    content: "horizontal-0 align-items",
+    content: "align-items",
   },
   TooltipCircle: "vertical-0 justify-content",
   Str: {

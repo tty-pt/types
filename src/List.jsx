@@ -34,7 +34,6 @@ List.propTypes = {
   style: PropTypes.object.isRequired,
   type: PropTypes.any.isRequired,
   filters: PropTypes.array,
-  onClick: PropTypes.object.isRequired,
   Component: PropTypes.elementType,
 };
 
