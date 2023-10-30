@@ -36,7 +36,7 @@ function Details(props) {
             <table className={detailsContainerClass}>
               <tbody>
                 {
-                  Object.keys(subType.meta?.recurse ? value[subType.meta.recurse] : value)
+                  Object.keys(subType.meta.recurse ? value[subType.meta.recurse] : value)
                     .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key), upMeta))
                 }
               </tbody>
@@ -45,7 +45,7 @@ function Details(props) {
         </tr>);
       }
 
-      const recurseEl = value && subType.recurse ? renderRecurse() : null;
+      const recurseEl = value && subType.meta.recurse !== undefined ? renderRecurse() : null;
 
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */
@@ -97,7 +97,7 @@ function Details(props) {
         </div>);
       }
 
-      const recurseEl = value && subType.recurse ? renderRecurse() : null;
+      const recurseEl = value && subType.meta.recurse !== undefined ? renderRecurse() : null;
 
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */

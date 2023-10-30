@@ -4,20 +4,19 @@ import { IconButton, Tooltip } from "@material-ui/core";
 
 export default
 function Mini(props) {
-  const { state, config = {} } = props;
+  const { state, config = {}, onClick, ...rem } = props;
   const {
     Component,
     extend,
     children = null,
-    onClick,
     ...rest
   } = typeof config === "function" ? config(state, props) : config;
 
   if (!Component) {
-    const { index } = props;
+    const realOnClick = typeof onClick === "function" ? onClick(props) : onClick;
 
     return Object.entries(config).map(([id, value]) => (<Mini
-      key={id} id={id} index={index} state={state[id]} config={value} onClick={onClick}
+      key={id} id={id} state={state[id]} config={value} onClick={e => realOnClick[id](state, e)} {...rem}
     />));
   }
 
@@ -36,6 +35,7 @@ function Mini(props) {
       extendChildren={extendChildren}
       { ...rest }
       { ...erest }
+      { ...rem }
     >
       {children}
     </Extends>);
