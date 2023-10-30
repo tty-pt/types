@@ -30,14 +30,14 @@ function Details(props) {
     [true]: (field, value, pType, subType, meta) => {
       const upMeta = { ...meta, ...pType.meta };
 
-      function renderRecurse(getSubInstance) {
+      function renderRecurse() {
         return (<tr key={field + "-children"}>
           <td colSpan="2">
             <table className={detailsContainerClass}>
               <tbody>
                 {
-                  Object.keys(value)
-                    .map(key => mapDetails(key, value[key], subType, getSubInstance(key), upMeta))
+                  Object.keys(subType.meta?.recurse ? value[subType.meta.recurse] : value)
+                    .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key), upMeta))
                 }
               </tbody>
             </table>
@@ -45,11 +45,7 @@ function Details(props) {
         </tr>);
       }
 
-      const recurseEl = value ? (subType.types ? (
-        renderRecurse(key => subType.types[key])
-      ) : subType.SubType ? (
-        renderRecurse(key => new subType.SubType(meta.t(key), {}, ...subType.subTypeArgs))
-      ) : null) : null;
+      const recurseEl = value && subType.recurse ? renderRecurse() : null;
 
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */
@@ -92,20 +88,16 @@ function Details(props) {
     [false]: (field, value, pType, subType, meta) => {
       const upMeta = { ...meta, ...pType.meta };
 
-      function renderRecurse(getSubInstance) {
+      function renderRecurse() {
         return (<div className={detailsContainerClass} key={field + "-children"}>
           {
-            Object.keys(value)
-              .map(key => mapDetails(key, value[key], subType, getSubInstance(key), upMeta))
+            Object.keys(subType.meta?.recurse ? value[subType.meta.recurse] : value)
+              .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key), upMeta))
           }
         </div>);
       }
 
-      const recurseEl = value ? (subType.types ? (
-        renderRecurse(key => subType.types[key])
-      ) : subType.SubType ? (
-        renderRecurse(key => new subType.SubType(meta.t(key), {}, ...subType.subTypeArgs))
-      ) : null) : null;
+      const recurseEl = value && subType.recurse ? renderRecurse() : null;
 
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */

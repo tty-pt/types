@@ -372,7 +372,7 @@ export class Enum extends Component {
   invalid(value) {
     if (value === undefined)
       return true;
-    return isNaN(value) ? value !== Object.keys(this.map)[0] : value;
+    return !this.map[value].valid;
   }
 }
 
@@ -381,11 +381,8 @@ Enum.extend = function extendEnum(declaration, map, options = {}) {
 };
 
 export class Bool extends Enum {
-  constructor(title, meta, map) {
-    super(title, meta, {
-      OK: true,
-      ERROR: false,
-    }, map);
+  constructor(title, meta, map, declaration = { OK: true, ERROR: false }) {
+    super(title, meta, declaration, map);
   }
 
   filter(value, filterValue) {
@@ -453,10 +450,6 @@ export class Bool extends Enum {
       ))}
     </TextField>);
   }
-
-  invalid(value) {
-    return !value;
-  }
 }
 
 Bool.extend = function extendBool(map, options = {}) {
@@ -503,8 +496,8 @@ export class Checkbox extends Bool {
 }
 
 export class Shape extends Bool {
-  constructor(title, meta, map, types) {
-    super(title, meta, map);
+  constructor(title, meta, types, map, declaration) {
+    super(title, meta, map, declaration);
     this.types = types;
   }
 
@@ -524,9 +517,9 @@ export class Shape extends Bool {
     if (value === undefined)
       return false;
 
-    for (const [key, value] of Object.entries(value)) {
+    for (const [key, val] of Object.entries(value)) {
       const type = this.types[key];
-      if (type.invalid(type.read(value)))
+      if (type.invalid(type.read(val)))
         return false;
     }
 
@@ -618,10 +611,16 @@ export class Shape extends Bool {
         subType.onChange(rvalue[key], rprevious[key]);
     });
   }
+
+  recurse(key, meta) {
+    if (this.meta.recurse)
+      return this.types[this.meta.recurse].recurse(key, meta);
+    return this.types[key]
+  }
 }
 
-Shape.extend = function extendRecurseBool(map, types, options = {}) {
-  return extend(Shape, [map, types], options);
+Shape.extend = function (types, map, declaration, options = {}) {
+  return extend(Shape, [types, map, declaration], options);
 };
 
 export class Dictionary extends Bool {
@@ -723,6 +722,11 @@ export class Dictionary extends Bool {
 
       { subType.Label({ ...props, self: subType }) }
     </>);
+  }
+
+  recurse(key, meta) {
+    const upMeta = metaMix(meta, this.meta);
+    return new this.SubType(upMeta.t(key), {}, ...this.subTypeArgs);
   }
 }
 
