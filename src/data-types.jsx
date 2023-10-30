@@ -571,7 +571,7 @@ export class Shape extends Bool {
       const subGotten = subGetter(type, gotten, downMeta, downKey);
       const value = type.preprocess(subGotten, downMeta, downKey + ".");
 
-      if (value)
+      if (value !== undefined)
         return ({
           ...a,
           [key]: value,
