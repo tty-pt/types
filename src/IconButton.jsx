@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
-import BaseIconButton from "@material-ui/core/IconButton";
-import Tooltip from "@material-ui/core/Tooltip";
+import BaseIconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 
 export default
 function IconButton(props) {

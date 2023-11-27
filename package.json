@@ -1,6 +1,6 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.2.14",
+  "version": "0.3.0",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "./dist/index.js",
   "exports": {
@@ -8,12 +8,10 @@
       "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
+    "./src/*": "./src/*",
     "./*": "./dist/*"
   },
-  "@tty-pt/scripts": {
-    "entry": "./src/index.jsx",
-    "library": true
-  },
+  "entry": "./src/index.jsx",
   "scripts": {
     "test": "echo no tests # scripts test",
     "watch": "scripts watch",
@@ -38,25 +36,30 @@
   },
   "homepage": "https://github.com/tty-pt/types#readme",
   "devDependencies": {
+    "@babel/core": "^7.23.5",
     "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/plugin-proposal-decorators": "^7.23.2",
     "@babel/plugin-transform-class-properties": "^7.22.5",
     "@babel/plugin-transform-private-methods": "^7.22.5",
     "@babel/plugin-transform-private-property-in-object": "^7.22.11",
+    "@babel/plugin-transform-runtime": "^7.23.4",
     "@babel/preset-env": "^7.23.2",
     "@babel/preset-react": "^7.22.15",
     "@babel/preset-typescript": "^7.22.15",
-    "@tty-pt/scripts": "^0.2.3",
+    "@mui/icons-material": "^5.14.19",
+    "@mui/material": "5.12.2",
+    "@tty-pt/scripts": "^0.2.9",
+    "@types/node": "^20.10.0",
     "prop-types": "^15.8.1",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
   },
   "peerDependencies": {
-    "@material-ui/core": "^4.12.4",
-    "@material-ui/icons": "^4.11.3",
+    "@mui/icons-material": "^5.14.18",
+    "@mui/material": "5.12.2",
     "prop-types": "^15.8.1",
-    "react": "^16.0.0 < 20.0.0",
-    "react-dom": "^16.0.0 < 20.0.0"
+    "react": ">= 16.0.0 < 20.0.0",
+    "react-dom": ">= 16.0.0 < 20.0.0"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
