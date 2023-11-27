@@ -1,17 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Tooltip from "@material-ui/core/Tooltip";
+import componentsSub from "./componentsSub";
 
 export function Enum(props) {
   const { values, enumKey, tooltip } = props;
-  const value = values[enumKey];
+  const { icon, title } = values[enumKey];
+  const { Tooltip, [icon + "Icon"]: Icon } = componentsSub.use();
+  const iconEl = Icon ? <Icon /> : icon;
 
-  if (!value)
-    throw new Error("Enum: no value for key " + enumKey);
-
-  const { Icon, title } = value;
-
-  return <Tooltip title={tooltip ?? title}><Icon /></Tooltip>;
+  return <Tooltip title={tooltip ?? title}>{iconEl}</Tooltip>;
 }
 
 Enum.propTypes = {

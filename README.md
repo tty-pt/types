@@ -166,8 +166,8 @@ const type = new Enum("Status", {}, declaration, map);
 > Like Enum but for boolean values
 ```js
 const map = {
-	[true]: { title: "true", Icon: TrueIcon },
-	[false]: { title: "false", Icon: FalseIcon },
+	[true]: { title: "true", icon: TrueIcon },
+	[false]: { title: "false", icon: FalseIcon },
 };
 
 const type = new Bool("Status", {}, map);

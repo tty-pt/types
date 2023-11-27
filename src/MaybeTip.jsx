@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Tooltip from "@material-ui/core/Tooltip";
+import componentsSub from "./componentsSub";
 import defaultCast from "./defaultCast";
 
 export default function MaybeTip(props) {
@@ -11,6 +11,8 @@ export default function MaybeTip(props) {
   const tooltipEl = tooltip ? typeof tooltip === "string" ? tooltip.split("\n").map((line, idx) => (
     <div key={idx}>{line}</div>
   )) : tooltip : null;
+
+  const { Tooltip } = componentsSub.use();
 
   return tooltipEl ? (
     <Tooltip title={tooltipEl} classes={{ tooltip: rootClass }}>

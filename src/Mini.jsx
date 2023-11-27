@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { IconButton, Tooltip } from "@material-ui/core";
+import componentsSub from "./componentsSub";
 
 export default
 function Mini(props) {
@@ -57,6 +57,7 @@ export function iconButton(state, props) {
         state: outerState,
         ...rest
       } = props;
+      const { IconButton, Tooltip } = componentsSub.use();
 
       return (<Tooltip title={typeof title === "string" ? title : title[state]}>
         <span>

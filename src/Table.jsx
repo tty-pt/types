@@ -31,12 +31,14 @@ function Details(props) {
       const upMeta = { ...meta, ...pType.meta };
 
       function renderRecurse() {
+        const obj = subType.meta?.recurse ? value[subType.meta.recurse] : value;
+
         return (<tr key={field + "-children"}>
           <td colSpan="2">
             <table className={detailsContainerClass}>
               <tbody>
                 {
-                  Object.keys(subType.meta.recurse ? value[subType.meta.recurse] : value)
+                  typeof Object.keys(typeof obj === "object" ? obj : {})
                     .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key), upMeta))
                 }
               </tbody>
@@ -58,7 +60,7 @@ function Details(props) {
               { renderValue ? <span>{ subType.renderValue(subType.read(value), value, index, field, upMeta, cast) }</span> : null }
               <span className={titleClass}>
                 <Tooltip cast={cast} tooltip={<div className={tooltipRootClass}>
-                    <div className={labelTitleClass}>{ subType.constructor.name }</div>
+                    <div className={labelTitleClass}>{ subType.label ?? subType.constructor.name }</div>
                     <Label self={subType} upMeta={upMeta} index={index} enumKey={field} cast={cast} />
                 </div>}>{
                 titleFormat(meta.t(pType.SubType
@@ -89,9 +91,11 @@ function Details(props) {
       const upMeta = { ...meta, ...pType.meta };
 
       function renderRecurse() {
+        const obj = subType.meta?.recurse ? value[subType.meta.recurse] : value;
+
         return (<div className={detailsContainerClass} key={field + "-children"}>
           {
-            Object.keys(subType.meta?.recurse ? value[subType.meta.recurse] : value)
+            Object.keys(typeof obj === "object" ? obj : {})
               .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key), upMeta))
           }
         </div>);
@@ -109,7 +113,7 @@ function Details(props) {
             { renderValue ? <span>{ subType.renderValue(subType.read(value), value, index, field, upMeta, cast) }</span> : null }
             <span className={titleClass}>
               <Tooltip cast={cast} tooltip={<div className={tooltipRootClass}>
-                  <div className={labelTitleClass}>{ subType.constructor.name }</div>
+                  <div className={labelTitleClass}>{ subType.label ?? subType.constructor.name }</div>
                   <Label self={subType} upMeta={upMeta} index={index} enumKey={field} cast={cast} />
               </div>}>{
               titleFormat(meta.t(pType.SubType
@@ -350,7 +354,7 @@ export default function Table(props) {
     columns.map((key, index) => {
       const Label = type.types[key].Label;
       return (<th key={key} className={thClass}><Tooltip cast={cast} tooltip={<>
-          <div className={labelTitleClass}>{ type.types[key].constructor.name }</div>
+          <div className={labelTitleClass}>{ type.types[key].label ?? type.types[key].constructor.name }</div>
           <Label self={type.types[key]} upMeta={upMeta} index={index} enumKey={key} cast={cast} />
         </>}>
         { upMeta.t(type.types[key].title) }
