@@ -1,6 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { IconButton, Tooltip } from "@material-ui/core";
+import {
+  IconButton,
+  Tooltip
+} from "@mui/material";
 
 export default
 function Mini(props) {

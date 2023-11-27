@@ -1,8 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
-import SearchIcon from "@material-ui/icons/Search";
-import IconButton from "@material-ui/core/IconButton";
-import InputBase from "@material-ui/core/InputBase";
+import SearchIcon from "@mui/icons-material/Search";
+import IconButton from "@mui/material/IconButton";
+import InputBase from "@mui/material/InputBase";
 import defaultCast from "./defaultCast";
 
 export

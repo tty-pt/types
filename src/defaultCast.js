@@ -23,7 +23,7 @@ export default {
     title: "font-size-14 pad-top-small",
   },
   Details: {
-    root: "pad horizontal flex-wrap flex-grow-children",
+    root: "pad horizontal flex-grow-children",
     column: "overflow-hidden " + table,
     header: "horizontal-small align-items",
     container: "margin-left-small border-top " + table,
