@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import componentsSub from "./componentsSub";
 import Tooltip from "@material-ui/core/Tooltip";
 
 export function Enum(props) {
