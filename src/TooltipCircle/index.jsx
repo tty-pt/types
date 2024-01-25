@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { componentsSub } from "../componentsSub";
+import componentsSub from "../componentsSub";
 import MyPropTypes from "../prop-types";
 import { defaultMeta } from "../data-types";
 import Circle from "./Circle";

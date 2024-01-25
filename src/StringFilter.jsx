@@ -1,14 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import SearchIcon from "@material-ui/icons/Search";
-import IconButton from "@material-ui/core/IconButton";
-import InputBase from "@material-ui/core/InputBase";
+import componentsSub from "./componentsSub";
 import defaultCast from "./defaultCast";
 
 export
 function StringFilter(props) {
   const { dataKey, title, value, onChange, cast } = props;
   const stringFilterClass = cast.Str?.Filter ?? defaultCast.Str.Filter;
+  const { SearchIcon, IconButton, InputBase } = componentsSub.use();
 
   return (<div data-testid={"filter-" + dataKey} className={stringFilterClass}>
     <IconButton aria-label={title}>

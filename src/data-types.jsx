@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import Tooltip from "@material-ui/core/Tooltip";
-import Button from "@material-ui/core/Button";
-import Chip from "@material-ui/core/Chip";
-import TextField from "@material-ui/core/TextField";
-import MenuItem from "@material-ui/core/MenuItem";
-import CheckboxComponent from "@material-ui/core/Checkbox";
-import CancelIcon from "@material-ui/icons/Cancel";
+import componentsSub from "./componentsSub";
 import { mapCount } from "./utils";
 import { Percent as PercentComponent } from "./Percent";
 import { Enum as EnumComponent } from "./Enum";
@@ -21,7 +15,7 @@ const defaultMeta = {
     title: "N/A",
     value: "undefined",
     color: "-black",
-    Icon: CancelIcon,
+    icon: "Cancel",
   },
   naTooltip: "Not Available",
   t: a => a,
@@ -67,7 +61,7 @@ function toDateTimeLocal(date) {
 function delKey(object, key) {
   const ret = { ...object };
   delete ret[key];
-  if (!Object.keys(ret).length)
+  if (!ret || !Object.keys(ret).length)
     return null;
   return ret;
 }
@@ -106,11 +100,27 @@ TextFilter.propTypes = {
   onChange: PropTypes.func,
 };
 
+function MetaTooltip(props) {
+  const { meta } = props;
+  const { Tooltip } = componentsSub.use();
+  return <Tooltip title={meta.naTooltip}>{meta.na.title}</Tooltip>;
+}
+
+function MetaButton(props) {
+  const { onClick, children } = props;
+  const { Button } = componentsSub.use();
+
+  return (<Button onClick={onClick}>
+    { children }
+  </Button>);
+}
+
 export
 function Filter(props) {
   const { chipKey, label, active, value, cast, ...rest } = props;
   const activeClass = cast?.Enum?.Filter?.active ?? defaultCast.Enum.Filter.active;
   const inactiveClass = cast?.Enum?.Filter?.inactive ?? defaultCast.Enum.Filter.inactive;
+  const { Chip } = componentsSub.use();
 
   return (<Chip
     data-testid={"chip-" + chipKey}
@@ -128,6 +138,8 @@ Filter.propTypes = {
 };
 
 export class Integer {
+  label = "Integer";
+
   constructor(title, meta = {}) {
     this.title = title;
     this.meta = meta;
@@ -146,7 +158,7 @@ export class Integer {
     const upMeta = metaMix(meta, this.meta);
 
     return value === undefined ? (
-      <Tooltip title={upMeta.naTooltip}>{upMeta.na.title}</Tooltip>
+      <MetaTooltip meta={upMeta} />
     ) : value;
   }
 
@@ -212,6 +224,8 @@ export class Integer {
 }
 
 export class Str extends Integer {
+  label = "Str";
+
   constructor(title, meta) {
     super(title, meta);
     this.initialFilter = "";
@@ -233,6 +247,8 @@ export class Str extends Integer {
 }
 
 export class Component extends Str {
+  label = "Component";
+
   constructor(title, meta) {
     super(title, meta);
     delete this.initialFilter;
@@ -253,6 +269,8 @@ export class Component extends Str {
 }
 
 export class Percent extends Component {
+  label = "Percent";
+
   constructor(title, meta, icons) {
     super(title, meta);
     this.icons = icons;
@@ -260,7 +278,7 @@ export class Percent extends Component {
 
   renderValue(value, _data, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
-    if (!value)
+    if (value === undefined)
       return <EnumComponent
         values={{ [undefined]: upMeta.na }}
         enumKey={undefined}
@@ -308,6 +326,8 @@ function EnumLabel(props) {
 }
 
 export class Enum extends Component {
+  label = "Enum";
+
   constructor(title, meta, declaration, map) {
     super(title, meta);
     this.initialFilter = null;
@@ -381,6 +401,8 @@ Enum.extend = function extendEnum(declaration, map, options = {}) {
 };
 
 export class Bool extends Enum {
+  label = "Bool";
+
   constructor(title, meta, map, declaration = { OK: true, ERROR: false }) {
     super(title, meta, declaration, map);
   }
@@ -397,6 +419,7 @@ export class Bool extends Enum {
 
     const { type, superType, value, onChange, dataKey, data } = props;
     const numbers = mapCount(superType, data, dataKey);
+    const { TextField, MenuItem } = componentsSub.use();
 
     const valuesMap = {
       0: {
@@ -459,6 +482,7 @@ Bool.extend = function extendBool(map, options = {}) {
 function InnerCheckbox(props) {
   const { name, index, value } = props;
   const [ checked, setChecked ] = useState(value);
+  const { Checkbox: CheckboxComponent } = componentsSub.use();
 
   useEffect(() => {
     setChecked(value);
@@ -478,6 +502,8 @@ InnerCheckbox.propTypes = {
 };
 
 export class Checkbox extends Bool {
+  static label = "Checkbox";
+
   constructor(title, meta, map) {
     super(title, meta, map);
   }
@@ -496,6 +522,8 @@ export class Checkbox extends Bool {
 }
 
 export class Shape extends Bool {
+  label = "Shape";
+
   constructor(title, meta, types, map, declaration) {
     super(title, meta, map, declaration);
     this.types = types;
@@ -624,6 +652,8 @@ Shape.extend = function (types, map, declaration, options = {}) {
 };
 
 export class Dictionary extends Bool {
+  label = "Dictionary";
+
   constructor(title, meta, map, SubType, subTypeArgs) {
     super(title, meta, map);
     this.SubType = SubType;
@@ -637,7 +667,7 @@ export class Dictionary extends Bool {
     if (dataKey.length) {
       const [ head, ...tail ] = dataKey;
       const dummy = new this.SubType("dummy", this.meta, ...this.subTypeArgs);
-      return Object.keys(value).reduce((a, key) => dummy.realRead(value[key][head], tail) ?? a);
+      return value ? Object.keys(value).reduce((a, key) => dummy.realRead(value[key][head], tail) ?? a) : undefined;
     }
 
     return value;
@@ -734,6 +764,8 @@ Dictionary.extend = (map, SubType, subTypeArgs, options = {}) =>
   extend(Dictionary, [map, SubType, subTypeArgs], options);
 
 export class DateTime extends Str {
+  label = "DateTime";
+
   constructor(title, meta) {
     super(title, meta);
     this.initialFilter = {};
@@ -744,7 +776,7 @@ export class DateTime extends Str {
     if (value !== undefined)
       return this.format(value, meta, data);
     else
-      return <Tooltip title={upMeta.naTooltip}>{upMeta.na.title}</Tooltip>;
+      return <MetaTooltip meta={upMeta} />;
   }
 
   format(value, _meta, _data) {
@@ -775,6 +807,7 @@ export class DateTime extends Str {
   Filter(props) {
     const { dataKey, type, value, onChange, cast } = props;
     const dateTimeFilterClass = cast.DateTime?.Filter ?? defaultCast.DateTime.Filter;
+    const { TextField } = componentsSub.use();
 
     return (<div data-testid={"filter-" + dataKey} className={dateTimeFilterClass}>
       <TextField
@@ -815,6 +848,8 @@ export class DateTime extends Str {
 }
 
 export class Fun extends Bool {
+  label = "Fun";
+
   constructor(title, meta, map) {
     super(title, meta, map);
     this.fun = null;
@@ -825,8 +860,8 @@ export class Fun extends Bool {
   }
 
   renderValue(value, _data, _index, _key, _meta, _cast) {
-    return (<Button onClick={value}>
+    return (<MetaButton onClick={value}>
       { this.title }
-    </Button>);
+    </MetaButton>);
   }
 }
