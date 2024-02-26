@@ -39,7 +39,7 @@ function Details(props) {
               <tbody>
                 {
                   typeof Object.keys(typeof obj === "object" ? obj : {})
-                    .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key), upMeta))
+                    .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key, upMeta), upMeta))
                 }
               </tbody>
             </table>
@@ -51,8 +51,10 @@ function Details(props) {
 
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */
-        const { value, tooltip, children, cellClass } = props;
+        const { value, cellClass } = props;
         const Label = subType.Label;
+        const read = subType.read(value);
+        const tooltip = subType.detailsTooltip(read, value, upMeta);
 
         return (<>
           <tr key={field}>
@@ -71,7 +73,7 @@ function Details(props) {
               </span>
             </td>
             <td className={cellClass}>
-              <Tooltip cast={cast} tooltip={tooltip}>{ children }</Tooltip>
+              <Tooltip cast={cast} tooltip={tooltip}>{ subType.format(read, upMeta, value) }</Tooltip>
             </td>
           </tr>
           { recurseEl }
@@ -80,7 +82,6 @@ function Details(props) {
 
       Component.propTypes = {
         tooltip: PropTypes.string,
-        children: PropTypes.node,
         value: PropTypes.any,
         cellClass: PropTypes.string,
       };
@@ -96,7 +97,7 @@ function Details(props) {
         return (<div className={detailsContainerClass} key={field + "-children"}>
           {
             Object.keys(typeof obj === "object" ? obj : {})
-              .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key), upMeta))
+              .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key, upMeta), upMeta))
           }
         </div>);
       }
@@ -105,8 +106,10 @@ function Details(props) {
 
       function Component(props) {
         /* eslint-disable-next-line no-unused-vars */
-        const { value, tooltip, children, cellClass } = props;
+        const { value, cellClass } = props;
         const Label = subType.Label;
+        const read = subType.read(value);
+        const tooltip = subType.detailsTooltip(read, value, upMeta);
 
         return (<>
           <div key={field} className={detailsHeaderClass}>
@@ -123,7 +126,7 @@ function Details(props) {
               }</Tooltip>
             </span>
             <span className={cellClass}>
-              <Tooltip cast={cast} tooltip={tooltip}>{ children }</Tooltip>
+              <Tooltip cast={cast} tooltip={tooltip}>{ subType.format(read, upMeta, value) }</Tooltip>
             </span>
           </div>
           { recurseEl }
@@ -133,7 +136,6 @@ function Details(props) {
       Component.propTypes = {
         value: PropTypes.any,
         tooltip: PropTypes.string,
-        children: PropTypes.node,
         cellClass: PropTypes.string,
       };
 
@@ -152,11 +154,8 @@ function Details(props) {
     return (<Component
       cellClass={cellClass}
       value={value}
-      tooltip={subType.detailsTooltip(read, value, meta)}
       key={field}
-    >
-      { subType.format(read, value, meta) }
-    </Component>);
+    />);
   }
 
   const detailsEl = details.map(key => mapDetails(key, rowData[key], type, type.types[key], detailsMeta));

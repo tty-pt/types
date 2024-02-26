@@ -171,7 +171,7 @@ export class Integer {
     </TextCenter>;
   }
 
-  format(value, _data, _meta) {
+  format(value, _meta, _data) {
     return "" + value;
   }
 
@@ -219,7 +219,7 @@ export class Integer {
   }
 
   detailsTooltip(value, data, meta) {
-    return value === undefined ? metaMix(meta, this.meta).naTooltip : this.format(value, data, meta);
+    return value === undefined ? metaMix(meta, this.meta).naTooltip : this.format(value, meta, data);
   }
 }
 
@@ -263,7 +263,7 @@ export class Component extends Str {
     </FHCenter>;
   }
 
-  format(value, _data, _meta) {
+  format(value, _meta, _data) {
     return value;
   }
 }
@@ -280,7 +280,8 @@ export class Percent extends Component {
     const upMeta = metaMix(meta, this.meta);
     if (value === undefined)
       return <EnumComponent
-        values={{ [undefined]: upMeta.na }}
+        values={{}}
+        meta={upMeta}
         enumKey={undefined}
         tooltip={upMeta.naTooltip}
       />;
@@ -288,7 +289,7 @@ export class Percent extends Component {
     return <PercentComponent icons={this.icons} level={value} />;
   }
 
-  format(value, _data, _meta) {
+  format(value, _meta, _data) {
     return value + "%";
   }
 
@@ -338,9 +339,9 @@ export class Enum extends Component {
   renderValue(value, _data, _index, _key, meta, _cast) {
     const upMeta = metaMix(meta, this.meta);
     return <EnumComponent
-      values={{ ...this.map,  [undefined]: upMeta.na }}
+      values={{ ...this.map }}
+      meta={upMeta}
       enumKey={value}
-      tooltip={value === undefined ? upMeta.naTooltip : null}
     />;
   }
 
@@ -392,7 +393,7 @@ export class Enum extends Component {
   invalid(value) {
     if (value === undefined)
       return true;
-    return !this.map[value].valid;
+    return !this.map[value]?.valid;
   }
 }
 
@@ -756,7 +757,7 @@ export class Dictionary extends Bool {
 
   recurse(key, meta) {
     const upMeta = metaMix(meta, this.meta);
-    return new this.SubType(upMeta.t(key), {}, ...this.subTypeArgs);
+    return new this.SubType(upMeta.t(key), upMeta, ...this.subTypeArgs);
   }
 }
 
