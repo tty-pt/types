@@ -1,6 +1,6 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.4.3",
+  "version": "0.4.6",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "./dist/types.umd.js",
   "module": "./dist/types.js",
@@ -29,11 +29,13 @@
   },
   "homepage": "https://github.com/tty-pt/types#readme",
   "devDependencies": {
-    "@tty-pt/scripts": "^0.4.9",
+    "@tty-pt/scripts": "^0.5.14",
     "@types/node": "^20.10.0",
+    "@types/react": "^18.2.55",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "typescript": "^5.3.3"
   },
   "peerDependencies": {
     "prop-types": "^15.8.1",
@@ -41,7 +43,8 @@
     "react-dom": ">= 16.0.0 < 20.0.0"
   },
   "dependencies": {
-    "@tty-pt/sub": "^2.2.11"
+    "@tty-pt/sub": "^2.2.14",
+    "lodash": "^4.17.21"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
