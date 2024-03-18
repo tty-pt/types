@@ -1,15 +1,22 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.4.6",
+  "version": "0.4.9",
   "description": "Automate table and filter creation and other things and have your data models in the client",
-  "main": "./dist/types.umd.js",
-  "module": "./dist/types.js",
-  "entry": "./src/types.js",
-  "!module": true,
+  "main": "dist/types.cjs.js",
+  "browser": "dist/types.web.js",
+  "module": "dist/types.js",
+  "types": "dist/types.d.ts",
+  "entry": "src/types.js",
+  "library": "ttyTypes",
+  "external": {
+    "@tty-pt/sub": "global ttySub",
+    "prop-types": "global PropTypes",
+    "react": "global React"
+  },
   "scripts": {
     "test": "echo no tests # scripts test",
     "watch": "scripts watch",
-    "build": "tsc && scripts build",
+    "build": "tsc --emitDeclarationOnly && scripts build",
     "lint": "scripts lint"
   },
   "repository": {
@@ -29,7 +36,8 @@
   },
   "homepage": "https://github.com/tty-pt/types#readme",
   "devDependencies": {
-    "@tty-pt/scripts": "^0.5.14",
+    "@tty-pt/scripts": "^0.6.0-9",
+    "@tty-pt/sub": "^2.2.16",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.55",
     "prop-types": "^15.8.1",
@@ -38,12 +46,12 @@
     "typescript": "^5.3.3"
   },
   "peerDependencies": {
+    "@tty-pt/sub": "^2.2.16",
     "prop-types": "^15.8.1",
     "react": ">= 16.0.0 < 20.0.0",
     "react-dom": ">= 16.0.0 < 20.0.0"
   },
   "dependencies": {
-    "@tty-pt/sub": "^2.2.14",
     "lodash": "^4.17.21"
   },
   "publishConfig": {
