@@ -5,6 +5,7 @@ import MaybeTip from "./MaybeTip";
 import useFilters from "./useFilters";
 import IconButton from "./IconButton";
 import defaultCast from "./defaultCast";
+import componentsSub from "./componentsSub";
 
 export function titleCamelCase(camelCase) {
   const almost = camelCase.replace(/([A-Z])/g, function (g) { return " " + g; });
@@ -25,6 +26,7 @@ function Details(props) {
   const detailsColumnClass = cast.Details?.column ?? defaultCast.Details.column;
   const tooltipRootClass = cast.Tooltip?.root ?? defaultCast.Tooltip.root;
   const labelTitleClass = cast.Label?.title ?? defaultCast.Label.title;
+  const { Table, TableBody, TableRow, TableCell } = componentsSub.use();
 
   const maybeTableMap = {
     [true]: (field, value, pType, subType, meta) => {
@@ -33,18 +35,18 @@ function Details(props) {
       function renderRecurse() {
         const obj = subType.meta?.recurse ? value[subType.meta.recurse] : value;
 
-        return (<tr key={field + "-children"}>
-          <td colSpan="2">
-            <table className={detailsContainerClass}>
-              <tbody>
+        return (<TableRow key={field + "-children"}>
+          <TableCell colSpan="2">
+            <Table className={detailsContainerClass}>
+              <TableBody>
                 {
                   typeof Object.keys(typeof obj === "object" ? obj : {})
                     .map(key => mapDetails(key, subType.meta.recurse ? value[subType.meta.recurse][key] : value[key], subType, subType.recurse(key, upMeta), upMeta))
                 }
-              </tbody>
-            </table>
-          </td>
-        </tr>);
+              </TableBody>
+            </Table>
+          </TableCell>
+        </TableRow>);
       }
 
       const recurseEl = value && subType.meta.recurse !== undefined ? renderRecurse() : null;
@@ -57,8 +59,8 @@ function Details(props) {
         const tooltip = subType.detailsTooltip(read, value, upMeta);
 
         return (<>
-          <tr key={field}>
-            <td className={detailsHeaderClass}>
+          <TableRow key={field}>
+            <TableCell className={detailsHeaderClass}>
               { renderValue ? <span>{ subType.renderValue(subType.read(value), value, index, field, upMeta, cast) }</span> : null }
               <span className={titleClass}>
                 <Tooltip cast={cast} tooltip={<div className={tooltipRootClass}>
@@ -71,11 +73,11 @@ function Details(props) {
                 ))
                 }</Tooltip>
               </span>
-            </td>
-            <td className={cellClass}>
+            </TableCell>
+            <TableCell className={cellClass}>
               <Tooltip cast={cast} tooltip={tooltip}>{ subType.format(read, upMeta, value) }</Tooltip>
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
           { recurseEl }
         </>);
       }
@@ -231,15 +233,16 @@ DetailsPanel.propTypes = {
 
 function Line(props) {
   const { data, index, type, className, columns, cast } = props;
+  const { TableRow, TableCell } = componentsSub.use();
   const tdClass = (cast.Table?.td ?? defaultCast.Table.td) + " " + className;
 
   const columnsEl = columns.map(key => (
-    <td className={tdClass} key={key}>
+    <TableCell className={tdClass} key={key}>
       { type.types[key].renderColumn(type.types[key].read(data[key]), data[key], index, key, type.meta, cast) }
-    </td>
+    </TableCell>
   ));
 
-  return (<tr data-testid={"row-" + index}>{columnsEl}</tr>);
+  return (<TableRow data-testid={"row-" + index}>{columnsEl}</TableRow>);
 }
 
 Line.propTypes = {
@@ -253,32 +256,33 @@ Line.propTypes = {
 function ExpandLine(props) {
   const { data, index, type, className, icons, detailPanel, columns, cast } = props;
   const [ open, setOpen ] = useState(false);
+  const { TableRow, TableCell } = componentsSub.use();
   const tdClass = (cast.Table?.td ?? defaultCast.Table.td) + " " + className;
   const rotateClass = cast.rotate ?? defaultCast.rotate;
 
   const columnsEl = [(
-    <td key="expand" className={tdClass}>
+    <TableCell key="expand" className={tdClass}>
       <IconButton
         data-testid="expand"
         iconClassName={open ? rotateClass : ""}
         Component={icons.DetailPanel}
         onClick={() => setOpen(!open)}
       />
-    </td>
+    </TableCell>
   )].concat(columns.map(key => (
-    <td key={key} className={tdClass}>
+    <TableCell key={key} className={tdClass}>
       { type.types[key].renderColumn(type.types[key].read(data[key]), data[key], index, key, type.meta, cast) }
-    </td>
+    </TableCell>
   )));
 
   if (open)
     return (<>
-      <tr data-testid={"row-" + index}>{columnsEl}</tr>
-      <tr data-testid={"details-" + index}><td className={className} colSpan={columnsEl.length}>{detailPanel(data, index)}</td></tr>
+      <TableRow data-testid={"row-" + index}>{columnsEl}</TableRow>
+      <TableRow data-testid={"details-" + index}><TableCell className={className} colSpan={columnsEl.length}>{detailPanel(data, index)}</TableCell></TableRow>
     </>);
 
   else
-    return <tr>{columnsEl}</tr>;
+    return <TableRow>{columnsEl}</TableRow>;
 }
 
 ExpandLine.propTypes = {
@@ -322,6 +326,10 @@ export default function Table(props) {
   const lineClass = cast.line ?? defaultCast.line;
   const labelTitleClass = cast.Label?.title ?? defaultCast.Label.title;
   const tableRootClass = cast.Table?.root ?? defaultCast.Table.root;
+  const {
+    Table, TableBody, TableContainer,
+    TableHead, TableRow, Paper,
+  } = componentsSub.use();
   const { Toolbar = DefaultToolbar } = components;
   const { filtersEl, filteredData } = useFilters({ data, type, config: filters, global, cast });
   const upMeta = {
@@ -382,16 +390,16 @@ export default function Table(props) {
       { filtersEl }
     </Toolbar>
 
-    <div className={tableRootClass}>
-      <table className={tableClass}>
-        <thead>
-          <tr>{ headEl }</tr>
-        </thead>
-        <tbody className={lineClass}>
+    <Paper><TableContainer className={tableRootClass}>
+      <Table className={tableClass}>
+        <TableHead>
+          <TableRow>{ headEl }</TableRow>
+        </TableHead>
+        <TableBody className={lineClass}>
           { linesEl }
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer></Paper>
     <input type="hidden" data-hidden-type="json" name={name + "_n"} value={data.length} />
   </>);
 }

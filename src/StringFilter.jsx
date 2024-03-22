@@ -7,9 +7,9 @@ export
 function StringFilter(props) {
   const { dataKey, title, value, onChange, cast } = props;
   const stringFilterClass = cast.Str?.Filter ?? defaultCast.Str.Filter;
-  const { SearchIcon, IconButton, InputBase } = componentsSub.use();
+  const { Paper, SearchIcon, IconButton, InputBase } = componentsSub.use();
 
-  return (<div data-testid={"filter-" + dataKey} className={stringFilterClass}>
+  return (<Paper data-testid={"filter-" + dataKey} className={stringFilterClass}>
     <IconButton aria-label={title}>
       <SearchIcon />
     </IconButton>
@@ -20,7 +20,7 @@ function StringFilter(props) {
       inputProps={{ "aria-label": title }}
       onChange={e => onChange(e.target.value)}
     />
-  </div>);
+  </Paper>);
 }
 
 StringFilter.propTypes = {

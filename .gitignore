@@ -1,5 +1,8 @@
 /node_modules
 /vss/color.h
 /vss/text-size.h
-/dist
+/cjs
+/web
+/esm
+/types
 /stats.json
