@@ -808,9 +808,9 @@ export class DateTime extends Str {
   Filter(props) {
     const { dataKey, type, value, onChange, cast } = props;
     const dateTimeFilterClass = cast.DateTime?.Filter ?? defaultCast.DateTime.Filter;
-    const { TextField } = componentsSub.use();
+    const { Paper, TextField } = componentsSub.use();
 
-    return (<div data-testid={"filter-" + dataKey} className={dateTimeFilterClass}>
+    return (<Paper data-testid={"filter-" + dataKey} className={dateTimeFilterClass}>
       <TextField
         label={"Start " + type.title}
         type="datetime-local"
@@ -835,7 +835,7 @@ export class DateTime extends Str {
           shrink: true,
         }}
       />
-    </div>);
+    </Paper>);
   }
 
   preprocess(data, meta, parentKey) {

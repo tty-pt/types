@@ -1,22 +1,29 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.4.9",
+  "version": "0.4.17",
   "description": "Automate table and filter creation and other things and have your data models in the client",
-  "main": "dist/types.cjs.js",
-  "browser": "dist/types.web.js",
-  "module": "dist/types.js",
-  "types": "dist/types.d.ts",
+  "main": "cjs/types.js",
+  "browser": "web/types.js",
+  "module": "esm/types.js",
+  "types": "types/types.d.ts",
   "entry": "src/types.js",
   "library": "ttyTypes",
+  "exports": {
+    ".": {
+      "import": "./esm/types.js",
+      "default": "./cjs/types.js"
+    }
+  },
   "external": {
     "@tty-pt/sub": "global ttySub",
+    "lodash": "global _",
     "prop-types": "global PropTypes",
     "react": "global React"
   },
   "scripts": {
     "test": "echo no tests # scripts test",
     "watch": "scripts watch",
-    "build": "tsc --emitDeclarationOnly && scripts build",
+    "build": "scripts build",
     "lint": "scripts lint"
   },
   "repository": {
@@ -35,24 +42,26 @@
     "url": "https://github.com/tty-pt/types/issues"
   },
   "homepage": "https://github.com/tty-pt/types#readme",
+  "files": [
+    "cjs",
+    "web",
+    "esm",
+    "types"
+  ],
   "devDependencies": {
-    "@tty-pt/scripts": "^0.6.0-9",
-    "@tty-pt/sub": "^2.2.16",
-    "@types/node": "^20.10.0",
-    "@types/react": "^18.2.55",
+    "@tty-pt/scripts": "^0.6.0-31",
+    "@tty-pt/sub": "^2.2.29",
     "prop-types": "^15.8.1",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "typescript": "^5.3.3"
+    "react-dom": "^18.2.0"
   },
   "peerDependencies": {
-    "@tty-pt/sub": "^2.2.16",
+    "@tty-pt/sub": "^2.2.29",
     "prop-types": "^15.8.1",
+    "lodash": "^4.17.21",
     "react": ">= 16.0.0 < 20.0.0",
     "react-dom": ">= 16.0.0 < 20.0.0"
-  },
-  "dependencies": {
-    "lodash": "^4.17.21"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
