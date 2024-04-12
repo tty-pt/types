@@ -1,4 +1,4 @@
-import { Sub } from "@tty-pt/sub";
+import { Sub } from "@mov-ai/mov-fe-lib-sub";
 const componentsSub = new Sub({});
 globalThis.types = {
   components: componentsSub,
