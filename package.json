@@ -1,6 +1,6 @@
 {
   "name": "@mov-ai/mov-fe-lib-types",
-  "version": "0.4.18-1",
+  "version": "0.4.18-2",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "cjs/types.js",
   "browser": "web/types.js",
