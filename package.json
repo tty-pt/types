@@ -10,8 +10,9 @@
   "library": "ttyTypes",
   "exports": {
     ".": {
-      "import": "./esm/types.js",
-      "default": "./cjs/types.js"
+      "import": "esm/types.js",
+      "types": "types/types.d.ts",
+      "default": "cjs/types.js"
     }
   },
   "external": {
@@ -50,14 +51,14 @@
   ],
   "devDependencies": {
     "@mov-ai/mov-fe-lib-scripts": "^0.6.0-39",
-    "@mov-ai/mov-fe-lib-sub": "^2.2.31-3",
+    "@mov-ai/mov-fe-lib-sub": "^2.2.31-4",
     "prop-types": "^15.8.1",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "peerDependencies": {
-    "@mov-ai/mov-fe-lib-sub": "^2.2.31-3",
+    "@mov-ai/mov-fe-lib-sub": "^2.2.31-4",
     "prop-types": "^15.8.1",
     "lodash": "^4.17.21",
     "react": ">= 16.0.0 < 20.0.0",
