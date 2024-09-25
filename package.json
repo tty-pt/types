@@ -26,6 +26,7 @@
     "watch": "scripts watch",
     "types": "scripts types",
     "build": "scripts build",
+    "fast": "scripts build",
     "lint": "scripts lint"
   },
   "repository": {
