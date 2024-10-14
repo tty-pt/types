@@ -10,9 +10,9 @@
   "library": "ttyTypes",
   "exports": {
     ".": {
-      "import": "esm/types.js",
-      "types": "types/types.d.ts",
-      "default": "cjs/types.js"
+      "import": "./esm/types.js",
+      "types": "./types/types.d.ts",
+      "default": "./cjs/types.js"
     }
   },
   "external": {
