@@ -1,4 +1,4 @@
-import { Sub } from "@tty-pt/sub";
+import { Sub } from "@mov-ai/mov-fe-lib-sub";
 
 export
 const metaSub = new Sub({});
