@@ -190,10 +190,12 @@ Details.propTypes = {
 
 function DetailsPanel(props) {
   const {
-    details = [], type, rowData = {},
+    details = [], type, handler,
     index, meta, components,
     titleFormat, renderValue, cast = {}, table,
   } = props;
+
+  const rowData = handler.use(index);
 
   function renderDetails(key, rowData, details) {
     return (<Details
@@ -232,7 +234,8 @@ DetailsPanel.propTypes = {
 };
 
 function Line(props) {
-  const { data, index, type, className, columns, cast } = props;
+  const { handler, index, type, className, columns, cast } = props;
+  const data = handler.use(index);
   const { TableRow, TableCell } = componentsSub.use();
   const tdClass = (cast.Table?.td ?? defaultCast.Table.td) + " " + className;
 
@@ -254,7 +257,8 @@ Line.propTypes = {
 };
 
 function ExpandLine(props) {
-  const { data, index, type, className, icons, detailPanel, columns, cast } = props;
+  const { handler, index, type, className, icons, detailPanel, columns, cast } = props;
+  const data = handler.use(index);
   const [ open, setOpen ] = useState(false);
   const { TableRow, TableCell } = componentsSub.use();
   const tdClass = (cast.Table?.td ?? defaultCast.Table.td) + " " + className;
@@ -315,7 +319,7 @@ DefaultToolbar.propTypes = {
 
 export default function Table(props) {
   const {
-    title = "", name = "table", data, type,
+    title = "", name = "table", handler, type,
     columns = [], filters = [], details = [],
     icons, components = {}, t, cast = {},
     titleFormat = title => title + ": ",
@@ -326,6 +330,7 @@ export default function Table(props) {
   const lineClass = cast.line ?? defaultCast.line;
   const labelTitleClass = cast.Label?.title ?? defaultCast.Label.title;
   const tableRootClass = cast.Table?.root ?? defaultCast.Table.root;
+  const data = handler.use();
   const {
     Table, TableBody, TableContainer,
     TableHead, TableRow, Paper,
@@ -337,13 +342,14 @@ export default function Table(props) {
     ...type.meta,
   };
 
+
   const div = details.length;
 
   const detailPanel = div ? function detailPanel(rowData, index) {
     return (<DetailsPanel
       details={details}
+      handler={handler}
       type={type}
-      rowData={rowData}
       index={index}
       meta={upMeta}
       components={components}
@@ -371,11 +377,11 @@ export default function Table(props) {
 
   const LineComponent = detailPanel ? ExpandLine : Line;
 
-  const linesEl = filteredData.map((rowData, index) => (
+  const linesEl = filteredData.map((_rowData, index) => (
     <LineComponent
       key={index}
       index={index}
-      data={rowData}
+      handler={handler}
       type={type}
       icons={icons}
       detailPanel={detailPanel}

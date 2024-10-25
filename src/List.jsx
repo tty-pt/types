@@ -4,7 +4,8 @@ import useFilters from "./useFilters";
 import defaultCast from "./defaultCast";
 
 const List = React.forwardRef((props, ref) => {
-  const { data, type, filters = [], Component, style, cast = {}, ...rest } = props;
+  const { handler, type, filters = [], Component, style, cast = {}, ...rest } = props;
+  const data = handler.use();
   const { filtersEl, filteredData } = useFilters({ data, type, config: filters, cast });
   const listRootClass = cast.List?.root ?? defaultCast.List.root;
   const listToolbarClass = cast.List?.Toolbar ?? defaultCast.List.Toolbar;

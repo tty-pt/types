@@ -1,6 +1,6 @@
 {
   "name": "@tty-pt/types",
-  "version": "0.4.19",
+  "version": "0.4.20",
   "description": "Automate table and filter creation and other things and have your data models in the client",
   "main": "cjs/types.js",
   "browser": "web/types.js",
@@ -24,7 +24,9 @@
   "scripts": {
     "test": "echo no tests # scripts test",
     "watch": "scripts watch",
-    "build": "scripts build",
+    "build": "scripts build && scripts types",
+    "fast": "scripts build",
+    "types": "scripts types",
     "lint": "scripts lint"
   },
   "repository": {
@@ -50,17 +52,19 @@
     "types"
   ],
   "devDependencies": {
-    "@tty-pt/scripts": "^0.6.0-35",
-    "@tty-pt/sub": "^2.2.31",
-    "prop-types": "^15.8.1",
+    "@tty-pt/scripts": "^0.6.8",
+    "@tty-pt/sub": "^2.3.2",
+    "@types/node": "^20.17.0",
+    "@types/react": "^18.3.12",
     "lodash": "^4.17.21",
+    "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "peerDependencies": {
-    "@tty-pt/sub": "^2.2.31",
-    "prop-types": "^15.8.1",
+    "@tty-pt/sub": "^2.3.2",
     "lodash": "^4.17.21",
+    "prop-types": "^15.8.1",
     "react": ">= 16.0.0 < 20.0.0",
     "react-dom": ">= 16.0.0 < 20.0.0"
   },

@@ -12,7 +12,6 @@ export * from "./Mini";
 export { default as IconButton } from "./IconButton";
 export { default as defaultCast } from "./defaultCast";
 export { StringFilter } from "./StringFilter";
-export { useMeta, withMeta } from "./useMeta";
 export { Enum as EnumComponent } from "./Enum";
 export { Percent as PercentComponent } from "./Percent";
 export { MetaHandler } from "./MetaHandler";
