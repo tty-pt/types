@@ -844,7 +844,7 @@ export class DateTime extends Str {
     if (!ret)
       return;
 
-    return Math.floor(ret * this.meta.measure ?? 1);
+    return Math.floor(ret * (this.meta.measure ?? 1));
   }
 }
 

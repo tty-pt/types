@@ -1,8 +1,13 @@
+import { Sub } from "@tty-pt/sub";
+
+export
+const metaSub = new Sub({});
+
 export class MetaHandler {
   constructor(type, fetcher, indexer, options = {}) {
     this.type = type;
+    this.title = options.title ?? type.title;
     this.adapter = options.adapter ?? (a => a);
-    this.subscriptions = new Map();
     this.sep = "@";
     this.global = options.global ?? false;
     this.fetcher = fetcher;
@@ -11,7 +16,7 @@ export class MetaHandler {
     this.indexKey = options.indexKey ?? "index";
     this.indexer = indexer;
     this.toIndex = !options.noIndex;
-    this.cache = this.toIndex ? [] : this.type.preprocess({}, this.type.meta, this.sep);
+    this.cache = this.toIndex ? [] : this.transform(this.type.preprocess({}, this.type.meta, this.sep));
     this.last = null;
 
     if (this.indexer)
@@ -22,30 +27,20 @@ export class MetaHandler {
     const boundSetData = this.setData.bind(this);
     this.fetcher.getAll(boundSetData);
     this.fetcherSub = this.fetcher[this.fetcherSubscribe](boundSetData);
-  }
 
-  updateSubs() {
-    for (let [ sub ] of this.subscriptions)
-      sub(this.cache);
+    metaSub.set(this.title, this.cache);
+    this.use = (path) => metaSub.use(this.title + (path ? "." + path : ""))
   }
 
   destroy() {
-    this.updateSubs(null);
+    metaSub.set(this.title, null);
     this.fetcher[this.fetcherUnsubscribe](this.fetcherSub);
     this.fetcherSub = null;
     this.indexer.unsubscribe(this.indexerSub);
-    delete this.subscriptions;
     this.cache = null;
     this.last = null;
     this.fetcher = null;
 
-  }
-
-  subscribe(onUpdate) {
-    this.subscriptions.set(onUpdate, true);
-    return () => {
-      this.subscriptions.delete(onUpdate);
-    };
   }
 
   // setState() {}
@@ -65,7 +60,7 @@ export class MetaHandler {
 
   transform(data) {
     if (!this.toIndex)
-      return this.type.preprocess(data, {}, this.sep);
+      return this.adapter(this.type.preprocess(data, {}, this.sep));
 
     if (!this.index)
       return [];
@@ -82,7 +77,7 @@ export class MetaHandler {
       this.onChange(newState);
     this.cache = newState;
     this.last = data;
-    this.updateSubs();
+    metaSub.set(this.title, this.cache);
   }
 
   setIndex(index) {
@@ -91,12 +86,12 @@ export class MetaHandler {
       this.cache = this.transform(this.last);
     } else
       this.cache = this.index = null;
-    this.updateSubs();
+    metaSub.set(this.title, this.cache);
   }
 
   dontSetIndex() {
     this.index = null;
     this.cache = this.transform(this.last);
-    this.updateSubs();
+    metaSub.set(this.title, this.cache);
   }
 }
