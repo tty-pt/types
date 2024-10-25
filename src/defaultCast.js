@@ -14,6 +14,7 @@ export default {
     table,
     th: "text-overflow overflow-hidden pad",
     td: "pad",
+    expand: "size-horizontal-small",
     Toolbar: {
       root: horizontalCenter + " justify-content-space-between",
       content: horizontalCenter + " justify-content-end",

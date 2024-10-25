@@ -3,6 +3,8 @@ import { Sub } from "@tty-pt/sub";
 export
 const metaSub = new Sub({});
 
+globalThis.metaSub = metaSub;
+
 export class MetaHandler {
   constructor(type, fetcher, indexer, options = {}) {
     this.type = type;
@@ -18,6 +20,7 @@ export class MetaHandler {
     this.toIndex = !options.noIndex;
     this.cache = this.toIndex ? [] : this.transform(this.type.preprocess({}, this.type.meta, this.sep));
     this.last = null;
+    this.globalAdapter = options.globalAdapter ?? (a => a);
 
     if (this.indexer)
       this.indexerSub = this.indexer.subscribe(this.setIndex.bind(this));
@@ -28,12 +31,12 @@ export class MetaHandler {
     this.fetcher.getAll(boundSetData);
     this.fetcherSub = this.fetcher[this.fetcherSubscribe](boundSetData);
 
-    metaSub.set(this.title, this.cache);
-    this.use = (path) => metaSub.use(this.title + (path ? "." + path : ""))
+    metaSub.update(this.cache, this.title);
+    this.use = (path) => metaSub.use(this.title + (path !== undefined ? "." + path : ""));
   }
 
   destroy() {
-    metaSub.set(this.title, null);
+    metaSub.update(null, this.title);
     this.fetcher[this.fetcherUnsubscribe](this.fetcherSub);
     this.fetcherSub = null;
     this.indexer.unsubscribe(this.indexerSub);
@@ -75,23 +78,23 @@ export class MetaHandler {
     const newState = this.transform(data);
     if (this.last)
       this.onChange(newState);
-    this.cache = newState;
+    this.cache = this.globalAdapter(newState);
     this.last = data;
-    metaSub.set(this.title, this.cache);
+    metaSub.update(this.cache, this.title);
   }
 
   setIndex(index) {
     if (Object.keys(index).length) {
       this.index = index;
-      this.cache = this.transform(this.last);
+      this.cache = this.globalAdapter(this.transform(this.last));
     } else
       this.cache = this.index = null;
-    metaSub.set(this.title, this.cache);
+    metaSub.update(this.cache, this.title);
   }
 
   dontSetIndex() {
     this.index = null;
-    this.cache = this.transform(this.last);
-    metaSub.set(this.title, this.cache);
+    this.cache = this.globalAdapter(this.transform(this.last));
+    metaSub.update(this.cache, this.title);
   }
 }

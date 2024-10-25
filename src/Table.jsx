@@ -262,10 +262,11 @@ function ExpandLine(props) {
   const [ open, setOpen ] = useState(false);
   const { TableRow, TableCell } = componentsSub.use();
   const tdClass = (cast.Table?.td ?? defaultCast.Table.td) + " " + className;
+  const expandClass = cast.Table?.expand ?? defaultCast.Table.expand;
   const rotateClass = cast.rotate ?? defaultCast.rotate;
 
   const columnsEl = [(
-    <TableCell key="expand" className={tdClass}>
+    <TableCell key="expand" className={tdClass + " " + expandClass}>
       <IconButton
         data-testid="expand"
         iconClassName={open ? rotateClass : ""}
@@ -330,7 +331,8 @@ export default function Table(props) {
   const lineClass = cast.line ?? defaultCast.line;
   const labelTitleClass = cast.Label?.title ?? defaultCast.Label.title;
   const tableRootClass = cast.Table?.root ?? defaultCast.Table.root;
-  const data = handler.use();
+  const expandClass = cast.Table?.expand ?? defaultCast.Table.expand;
+  const data = handler.use() ?? [];
   const {
     Table, TableBody, TableContainer,
     TableHead, TableRow, Paper,
@@ -345,7 +347,7 @@ export default function Table(props) {
 
   const div = details.length;
 
-  const detailPanel = div ? function detailPanel(rowData, index) {
+  const detailPanel = div ? function detailPanel(_rowData, index) {
     return (<DetailsPanel
       details={details}
       handler={handler}
@@ -362,7 +364,7 @@ export default function Table(props) {
 
   const Tooltip = components?.Tooltip ?? MaybeTip;
 
-  const headEl = (detailPanel ? [<th key="expand"></th>] : []).concat(
+  const headEl = (detailPanel ? [<th key="expand" className={expandClass}></th>] : []).concat(
     // TODO support recursive type columns aka "robot.name"
     columns.map((key, index) => {
       const Label = type.types[key].Label;
